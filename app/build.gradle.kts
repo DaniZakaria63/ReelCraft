@@ -4,11 +4,7 @@ plugins {
 
 android {
     namespace = "id.my.daniza.reelcraft"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "id.my.daniza.reelcraft"
@@ -18,6 +14,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++17"
