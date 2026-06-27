@@ -1,34 +1,23 @@
 package id.my.daniza.reelcraft
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.TextView
-import id.my.daniza.reelcraft.databinding.ActivityMainBinding
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.navigation.compose.rememberNavController
+import id.my.daniza.reelcraft.ui.navigation.ReelCraftNavGraph
+import id.my.daniza.reelcraft.ui.theme.ReelCraftTheme
 
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var binding: ActivityMainBinding
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        // Example of a call to a native method
-        binding.sampleText.text = stringFromJNI()
-    }
-
-    /**
-     * A native method that is implemented by the 'reelcraft' native library,
-     * which is packaged with this application.
-     */
-    external fun stringFromJNI(): String
-
-    companion object {
-        // Used to load the 'reelcraft' library on application startup.
-        init {
-            System.loadLibrary("reelcraft")
+        enableEdgeToEdge()
+        setContent {
+            ReelCraftTheme {
+                val navController = rememberNavController()
+                ReelCraftNavGraph(navController = navController)
+            }
         }
     }
 }
