@@ -8,6 +8,7 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
 #include <libavutil/display.h>
+#include <libavutil/rational.h>
 #include <libswscale/swscale.h>
 }
 
@@ -123,7 +124,7 @@ int decoder_rotation(FFDecoder* d) { return d ? d->rotation : 0; }
 
 bool decoder_seek(FFDecoder* d, int64_t timestamp_us) {
     if (!d) return false;
-    int64_t ts = timestamp_us * d->time_base.den / 1000000LL;
+    int64_t ts = av_rescale_q(timestamp_us, (AVRational){1, 1000000}, d->time_base);
     if (av_seek_frame(d->fmt_ctx, d->stream_idx, ts, AVSEEK_FLAG_BACKWARD) < 0) {
         av_seek_frame(d->fmt_ctx, d->stream_idx, ts, AVSEEK_FLAG_BACKWARD);
     }

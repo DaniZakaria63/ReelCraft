@@ -16,6 +16,7 @@ struct FFFilterGraph {
     AVFilterContext* buffersrc_ctx = nullptr;
     AVFilterContext* buffersink_ctx = nullptr;
     AVFrame* frame = nullptr;
+    AVFrame* filtered = nullptr;
     SwsContext* sws_in = nullptr;
     SwsContext* sws_out = nullptr;
     int width = 0;
@@ -85,6 +86,8 @@ FFFilterGraph* filter_graph_create(int width, int height, const char* desc) {
     fg->frame->format = AV_PIX_FMT_RGBA;
     av_frame_get_buffer(fg->frame, 32);
 
+    fg->filtered = av_frame_alloc();
+
     return fg;
 }
 
@@ -92,6 +95,7 @@ void filter_graph_close(FFFilterGraph* fg) {
     if (!fg) return;
     avfilter_graph_free(&fg->graph);
     av_frame_free(&fg->frame);
+    av_frame_free(&fg->filtered);
     sws_freeContext(fg->sws_in);
     sws_freeContext(fg->sws_out);
     delete fg;
@@ -118,22 +122,20 @@ bool filter_graph_process(FFFilterGraph* fg,
 
     if (av_buffersrc_add_frame(fg->buffersrc_ctx, fg->frame) < 0) return false;
 
-    AVFrame* filtered = av_frame_alloc();
-    ret = av_buffersink_get_frame(fg->buffersink_ctx, filtered);
-    if (ret < 0) { av_frame_free(&filtered); return false; }
+    ret = av_buffersink_get_frame(fg->buffersink_ctx, fg->filtered);
+    if (ret < 0) return false;
 
     fg->sws_out = sws_getCachedContext(
-        fg->sws_out, filtered->width, filtered->height, (AVPixelFormat)filtered->format,
+        fg->sws_out, fg->filtered->width, fg->filtered->height, (AVPixelFormat)fg->filtered->format,
         out_width, out_height, AV_PIX_FMT_RGBA,
         SWS_BILINEAR, nullptr, nullptr, nullptr);
 
     uint8_t* out_data[4] = {out_rgba, nullptr, nullptr, nullptr};
     int out_linesize[4] = {out_width * 4, 0, 0, 0};
 
-    sws_scale(fg->sws_out, filtered->data, filtered->linesize, 0, filtered->height,
+    sws_scale(fg->sws_out, fg->filtered->data, fg->filtered->linesize, 0, fg->filtered->height,
               out_data, out_linesize);
 
-    av_frame_unref(filtered);
-    av_frame_free(&filtered);
+    av_frame_unref(fg->filtered);
     return true;
 }
