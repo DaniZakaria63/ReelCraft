@@ -2,8 +2,8 @@ package id.my.daniza.reelcraft.ui.editor.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Movie
@@ -19,14 +19,15 @@ import id.my.daniza.reelcraft.model.Project
 @Composable
 fun PreviewPane(
     project: Project,
+    isDetailVisible: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val previewHeight = if (isDetailVisible) 180.dp else 280.dp
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(
-                project.aspectRatio.width.toFloat() / project.aspectRatio.height.toFloat()
-            )
+            .height(previewHeight)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer),
         contentAlignment = Alignment.Center
@@ -34,7 +35,6 @@ fun PreviewPane(
         Icon(
             Icons.Default.Movie,
             contentDescription = "Preview",
-            modifier = Modifier.align(Alignment.Center),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
         )
     }

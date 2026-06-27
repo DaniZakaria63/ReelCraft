@@ -1,14 +1,14 @@
 package id.my.daniza.reelcraft.ui.editor
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
@@ -23,7 +23,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -91,10 +90,36 @@ fun EditorScreen(
         },
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
+            EditorToolbar(
+                currentTool = viewModel.currentTool,
+                onToolSelected = { viewModel.selectTool(it) }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            PreviewPane(
+                project = project,
+                isDetailVisible = viewModel.bottomSheetContent != null,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+
+            PlaybackBar(
+                currentPositionUs = timelineState.currentPositionUs,
+                durationUs = timelineState.durationUs,
+                isPlaying = timelineState.isPlaying,
+                onSeek = { viewModel.seekTo(it) },
+                onTogglePlay = { viewModel.togglePlayback() },
+                modifier = Modifier.padding(vertical = 2.dp)
+            )
+
             AnimatedVisibility(
                 visible = viewModel.bottomSheetContent != null,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
+                enter = expandVertically(expandFrom = Alignment.Top),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top)
             ) {
                 BottomPanelContentSwitch(
                     bottomSheetContent = viewModel.bottomSheetContent,
@@ -114,48 +139,23 @@ fun EditorScreen(
                     onShowPresets = { viewModel.showPresets() }
                 )
             }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            PreviewPane(
-                project = project,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
 
-            PlaybackBar(
-                currentPositionUs = timelineState.currentPositionUs,
-                durationUs = timelineState.durationUs,
-                isPlaying = timelineState.isPlaying,
-                onSeek = { viewModel.seekTo(it) },
-                onTogglePlay = { viewModel.togglePlayback() },
-                modifier = Modifier.padding(vertical = 2.dp)
-            )
-
-            EditorToolbar(
-                currentTool = viewModel.currentTool,
-                onToolSelected = { viewModel.selectTool(it) },
-                modifier = Modifier.padding(vertical = 2.dp)
-            )
-
-            TimelineView(
-                clips = project.clips,
-                currentPositionUs = timelineState.currentPositionUs,
-                zoomLevel = timelineState.zoomLevel,
-                selectedClipId = timelineState.selectedClipId,
-                durationUs = timelineState.durationUs,
-                onSeek = { viewModel.seekTo(it) },
-                onSelectClip = { viewModel.selectClip(it) },
-                onZoomIn = { viewModel.setZoom(timelineState.zoomLevel * 1.5f) },
-                onZoomOut = { viewModel.setZoom(timelineState.zoomLevel / 1.5f) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
-            )
+            Box(modifier = Modifier.weight(1f)) {
+                TimelineView(
+                    clips = project.clips,
+                    currentPositionUs = timelineState.currentPositionUs,
+                    zoomLevel = timelineState.zoomLevel,
+                    selectedClipId = timelineState.selectedClipId,
+                    durationUs = timelineState.durationUs,
+                    onSeek = { viewModel.seekTo(it) },
+                    onSelectClip = { viewModel.selectClip(it) },
+                    onZoomIn = { viewModel.setZoom(timelineState.zoomLevel * 1.5f) },
+                    onZoomOut = { viewModel.setZoom(timelineState.zoomLevel / 1.5f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                )
+            }
         }
     }
 }
