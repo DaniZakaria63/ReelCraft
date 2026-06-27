@@ -3,3 +3,13 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
 }
+
+subprojects {
+    tasks.configureEach {
+        if (name == "clean") {
+            doLast {
+                delete("${projectDir}/.cxx")
+            }
+        }
+    }
+}

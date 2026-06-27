@@ -4,20 +4,20 @@ plugins {
 
 android {
     namespace = "id.my.daniza.segment"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         minSdk = 27
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
         externalNativeBuild {
             cmake {
-                cppFlags("")
+                cppFlags += "-std=c++17"
             }
         }
     }

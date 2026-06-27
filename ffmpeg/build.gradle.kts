@@ -5,9 +5,10 @@ plugins {
 android {
     namespace = "id.my.daniza.ffmpeg"
     compileSdk = 37
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 27
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
