@@ -1,0 +1,242 @@
+ReelCraft Personal Use License
+Copyright (c) 2026 Dani Zakaria (danizakaria63.github.io). All rights reserved.
+
+
+1. Grant of Personal Use License
+
+Subject to the terms and conditions of this license, the copyright holder grants you a non-exclusive, non-transferable, non-sublicensable, revocable license to use the licensed software solely for personal, non-commercial purposes.
+
+
+2. Definition of "Personal Use"
+
+"Personal use" means use of the software by an individual natural person for their own private purposes where:
+  (a) No direct or indirect monetary compensation, revenue, or economic benefit is derived from the use of the software;
+  (b) The software is not made available, accessible, or distributed to any third party;
+  (c) The output produced by the software is not sold, licensed, sublicensed, monetized, or otherwise exploited commercially;
+  (d) The software is not deployed, hosted, streamed, or served to others in any form, including but not limited to as a service (SaaS), application service provider (ASP), cloud service, platform, or remote computing environment;
+  (e) The software is not used in any business, trade, profession, employment, commercial enterprise, government institution, educational institution (except by individual students for personal academic projects), or non-profit organization;
+  (f) The software is not used to train, fine-tune, create, or augment any machine learning model, artificial intelligence system, or neural network, regardless of whether the resulting model is distributed, kept private, or used internally.
+
+
+3. Explicitly Prohibited Uses - No License Granted
+
+The following acts are strictly prohibited unless you obtain prior written permission from the copyright holder. No implied license is granted for any of the following:
+
+  3.1 Commercial Use
+  Any use of the software, in whole or in part, that is intended for or directed toward commercial advantage, monetary compensation, revenue generation, or financial gain of any kind.
+
+  3.2 Redistribution
+  Distributing, publishing, sublicensing, selling, renting, leasing, lending, or otherwise making the software available to any third party in any form, whether modified or unmodified, in whole or in part, including:
+    (i)  Bundling with another product or service;
+    (ii) Including in a software bundle, distribution, or collection;
+    (iii) Hosting on any public repository, package manager, app store, marketplace, or download site;
+    (iv) Transmitting over any network where a third party may access, copy, download, or derive the software.
+
+  3.3 Software as a Service (SaaS) / Cloud Services
+  Operating, hosting, streaming, serving, or making the software's functionality available to third parties over a network, the internet, or any other communication medium, whether or not a fee is charged.
+
+  3.4 Modified Versions / Derivative Works
+  Creating, using, distributing, or making available any modification, adaptation, derivative work, translation, port, patch, fork, or improvement of the software, whether in source code or binary form, without explicit written permission. This includes:
+    (i)  Creating a fork of the repository;
+    (ii) Distributing patches or modifications;
+    (iii) Porting to another platform, language, or framework;
+    (iv) Creating plugins, extensions, or modules that interface with or extend the software.
+
+  3.5 Reverse Engineering
+  Decompiling, disassembling, decrypting, extracting, reverse engineering, or otherwise attempting to derive the source code, algorithms, data structures, or underlying ideas of the software, except and only to the extent that applicable law expressly permits such acts notwithstanding this prohibition.
+
+  3.6 Machine Learning / AI Training
+  Using the software, its output, its source code, or any data derived from the software to:
+    (i)  Train, fine-tune, fit, validate, or evaluate any machine learning model, neural network, deep learning system, statistical model, or artificial intelligence system;
+    (ii) Generate synthetic training data;
+    (iii) Create embeddings, feature representations, or model weights;
+    (iv) Conduct research that results in or contributes to any machine learning model, regardless of whether the model is released publicly;
+    (v)  Augment, distill, or transfer knowledge to any other model (including via distillation, pruning, quantization aware training, or knowledge transfer techniques).
+
+  This prohibition applies regardless of:
+    (i)  Whether the resulting model is open source or proprietary;
+    (ii) Whether the resulting model is distributed or kept private;
+    (iii) Whether the training is conducted for research, academic, commercial, or personal purposes.
+
+  3.7 Benchmarking and Competitive Analysis
+  Publishing, disclosing, or sharing any benchmark results, performance measurements, comparison data, feature analysis, or competitive analysis of the software without prior written permission.
+
+  3.8 Embedded Systems / IoT
+  Embedding, integrating, combining, or deploying the software, in whole or in part, into any embedded system, firmware, Internet of Things (IoT) device, smart appliance, automotive system, medical device, industrial controller, safety-critical system, defense system, aviation system, nuclear facility, or any other hardware device or system.
+
+  3.9 High-Risk Activities
+  Using the software in or with any safety-critical, life-support, medical device, military, defense, aviation, nuclear, or other high-risk environment or application where failure could lead to death, personal injury, property damage, or environmental harm.
+
+  3.10 Circumvention
+  Circumventing, disabling, removing, modifying, or otherwise defeating any technical protection measures, license enforcement mechanisms, usage restrictions, copy protection, digital rights management, or any other security measure implemented in or with the software.
+
+  3.11 Automated or Bulk Use
+  Unless explicitly permitted in writing:
+    (i)  Automated, scripted, programmatic, or bulk processing of video, audio, or image content;
+    (ii) Batch processing, unattended operation, or server-side rendering;
+    (iii) Use with any robotic process automation (RPA), continuous integration system, automated workflow, or scripted pipeline.
+
+  3.12 Transfer of Rights
+  Assigning, sublicensing, transferring, leasing, renting, pledging, or otherwise conveying any rights granted under this license to any third party.
+
+  3.13 Removal of Notices
+  Removing, altering, concealing, or obscuring any copyright notice, license notice, trademark notice, attribution notice, or disclaimer of warranty included in or with the software.
+
+
+4. Third-Party Components
+
+The software incorporates third-party libraries, each distributed under its own license. Use of these components is governed by their respective licenses, not by this license.
+
+  4.1 FFmpeg
+  FFmpeg is licensed under the LGPLv2.1+ (Lesser General Public License version 2.1 or later). A copy of the LGPLv2.1 can be found at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html. You may, at your option, obtain the FFmpeg source code from https://ffmpeg.org. The FFmpeg binaries included in this software are dynamically linked.
+
+  4.2 TensorFlow Lite
+  TensorFlow Lite is licensed under the Apache License 2.0. A copy of this license can be found at https://www.apache.org/licenses/LICENSE-2.0.
+
+  4.3 SINet Model (segment/src/main/assets/models/sinet.tflite)
+  The SINet model (selfie segmentation) is distributed under the terms provided by its original authors. See segment/src/main/assets/models/sinet_metadata.json for attribution and licensing information.
+
+  4.4 MediaPipe Selfie Model (segment/src/main/assets/models/mediapipe_selfie.tflite)
+  The MediaPipe Selfie Segmentation model is distributed under the Apache License 2.0 by Google LLC.
+
+  4.5 Android Jetpack / Compose
+  Android Jetpack and Jetpack Compose libraries are licensed under the Apache License 2.0.
+
+  4.6 Other Dependencies
+  All other third-party dependencies included via the Gradle build system (including but not limited to AppCompat, Material Components, ConstraintLayout, WorkManager) are licensed under their respective open-source licenses as indicated in their official repositories.
+
+  4.7 No Warranty from Third Parties
+  The copyright holder makes no representation or warranty regarding any third-party component, and disclaims all liability arising from the use of third-party components.
+
+  4.8 Disclaimer Regarding Third-Party Licenses
+  Nothing in this license restricts, expands, or modifies the rights granted by the third-party licenses listed above. Where this license conflicts with a third-party license regarding that specific third-party component, the third-party license governs for that component.
+
+
+5. Requesting Permission
+
+If you wish to use the software in a manner not permitted by this license, you must request and obtain written (including electronic) permission from the copyright holder.
+
+To request permission, contact: dani.zakaria@proton.me
+
+The copyright holder reserves the right to:
+  (a) Grant or deny any request at their sole discretion;
+  (b) Condition permission on any terms they see fit;
+  (c) Charge a fee for permission;
+  (d) Impose time limitations, scope restrictions, or other conditions.
+
+Any permission granted is:
+  (i)  Specific to the described use case only;
+  (ii) Non-transferable and revocable at any time;
+  (iii) Does not waive any other terms of this license.
+
+
+6. Termination
+
+  6.1 Automatic Termination
+  This license terminates automatically and immediately, without notice, if you violate any term of this license.
+
+  6.2 Effect of Termination
+  Upon termination:
+    (i)  You must immediately cease all use of the software;
+    (ii) You must destroy all copies of the software in your possession or control, including all modified versions and derivative works;
+    (iii) You must certify in writing that you have complied with these requirements if requested;
+    (iv) Sections 3 through 10 of this license survive termination.
+
+  6.3 No Revival
+  Terminated licenses cannot be revived. A new license, if granted, constitutes a new agreement.
+
+
+7. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, NONINFRINGEMENT, QUIET ENJOYMENT, ACCURACY, COMPLETENESS, CORRECTNESS, OR THAT THE SOFTWARE WILL OPERATE WITHOUT INTERRUPTION OR ERROR.
+
+THE ENTIRE RISK AS TO THE QUALITY, PERFORMANCE, AND RESULTS OF THE SOFTWARE IS WITH YOU. THE SOFTWARE MAY CONTAIN BUGS, ERRORS, OR DEFICIENCIES. NO GUARANTEE IS MADE REGARDING THE SOFTWARE'S OPERATION, RELIABILITY, SECURITY, OR COMPATIBILITY WITH ANY HARDWARE, SOFTWARE, OR SYSTEM.
+
+
+8. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE COPYRIGHT HOLDER, ITS AFFILIATES, CONTRIBUTORS, SUPPLIERS, OR AUTHORIZED REPRESENTATIVES BE LIABLE FOR ANY CLAIM, DAMAGES, OR LIABILITY, WHETHER IN CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, OR OTHERWISE, ARISING FROM OR RELATED TO THE USE, INABILITY TO USE, OR PERFORMANCE OF THE SOFTWARE, INCLUDING BUT NOT LIMITED TO:
+  (a) DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES;
+  (b) LOSS OF PROFITS, REVENUE, BUSINESS, DATA, GOODWILL, OR SAVINGS;
+  (c) LOSS OF OR CORRUPTION TO VIDEO, AUDIO, IMAGE, OR OTHER CONTENT;
+  (d) COSTS OF PROCUREMENT OF SUBSTITUTE SOFTWARE OR SERVICES;
+  (e) PERSONAL INJURY OR PROPERTY DAMAGE;
+  (f) SYSTEM DOWNTIME OR DATA BREACH.
+
+THIS LIMITATION APPLIES EVEN IF THE COPYRIGHT HOLDER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES AND REGARDLESS OF THE THEORY OF LIABILITY. SOME JURISDICTIONS DO NOT ALLOW CERTAIN LIMITATIONS OF LIABILITY, SO SOME OR ALL OF THE ABOVE MAY NOT APPLY TO YOU.
+
+
+9. Indemnification
+
+You agree to indemnify, defend, and hold harmless the copyright holder, its affiliates, contributors, and representatives from and against any and all claims, damages, liabilities, costs, and expenses (including reasonable legal fees) arising from or related to:
+  (a) Your use of the software in violation of this license;
+  (b) Your modification or distribution of the software;
+  (c) Your breach of any term of this license.
+
+
+10. Export Control
+
+You agree to comply with all applicable export control laws and regulations. You may not export, re-export, transfer, or release the software to any country, person, or entity subject to applicable sanctions or embargoes. You represent and warrant that you are not located in, under the control of, or a national or resident of any country or territory subject to export restrictions.
+
+
+11. Governing Law and Jurisdiction
+
+This license shall be governed by and construed in accordance with the laws of Indonesia, without regard to its conflict of laws provisions.
+
+Any dispute arising from or related to this license or the use of the software shall be subject to the exclusive jurisdiction of the courts located in Indonesia.
+
+The parties expressly exclude the application of the United Nations Convention on Contracts for the International Sale of Goods (CISG) and the Uniform Computer Information Transactions Act (UCITA).
+
+
+12. Severability
+
+If any provision of this license is held to be invalid, illegal, or unenforceable under applicable law, such provision shall be:
+  (i)  Construed to reflect the original intent of the parties, or if that is not possible;
+  (ii) Severed from the remaining provisions, which shall remain in full force and effect.
+
+
+13. Waiver
+
+No failure or delay by the copyright holder in exercising any right, power, or remedy under this license shall operate as a waiver. A waiver of any breach or default does not constitute a waiver of any subsequent breach or default.
+
+
+14. Entire Agreement
+
+This license constitutes the entire agreement between you and the copyright holder regarding the software and supersedes all prior or contemporaneous communications, proposals, and agreements, whether electronic, oral, or written.
+
+
+15. No Partnership
+
+Nothing in this license creates a partnership, joint venture, agency, franchise, sales relationship, or employment relationship between you and the copyright holder.
+
+
+16. Auditing
+
+Upon reasonable notice, the copyright holder or their authorized representative may audit your use of the software to ensure compliance with this license. You agree to cooperate with such audits and provide reasonable access to records, systems, and personnel.
+
+
+17. Successors and Assigns
+
+This license binds and inures to the benefit of the parties and their respective successors and permitted assigns. You may not assign this license without prior written consent.
+
+
+18. Prevailing Terms - Interpretation
+
+  (a) Section headings are for convenience only and do not affect interpretation.
+  (b) "Including" means "including without limitation."
+  (c) Singular includes plural and vice versa.
+  (d) References to "days" mean calendar days.
+
+
+19. Language
+
+This license is written in English. Any translation is provided for convenience only, and the English version governs. In the event of any inconsistency between the English version and a translated version, the English version prevails.
+
+
+20. Contact
+
+For questions, permission requests, or license inquiries:
+
+  Dani Zakaria
+  Email: dani.zakaria@proton.me
+  Website: https://danizakaria63.github.io
