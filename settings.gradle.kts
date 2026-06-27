@@ -24,4 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "ReelCraft"
 include(":app")
- 
+include(":ffmpeg")
+include(":segment")
