@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import id.my.daniza.reelcraft.data.DummyProjects
+import id.my.daniza.reelcraft.engine.PresetEngine
 import id.my.daniza.reelcraft.model.AppliedEffect
 import id.my.daniza.reelcraft.model.Clip
 import id.my.daniza.reelcraft.model.MaskType
@@ -83,6 +84,22 @@ class EditorViewModel : ViewModel() {
             EditorTool.SELECT -> hideBottomSheet()
             else -> hideBottomSheet()
         }
+    }
+
+    fun buildFilterStringForClip(clipId: String, positionUs: Long? = null): String? {
+        val clip = project?.clips?.find { it.id == clipId } ?: return null
+        val effects = clip.effects.map { e ->
+            if (positionUs != null && e.keyframes.isNotEmpty()) {
+                val kfIntensity = PresetEngine.intensityOverTime(e, positionUs)
+                e.copy(intensity = kfIntensity)
+            } else e
+        }
+        return PresetEngine.buildFilterString(effects)
+    }
+
+    fun buildFilterStringForCurrentClip(): String? {
+        val clipId = timelineState.selectedClipId ?: project?.clips?.firstOrNull()?.id ?: return null
+        return buildFilterStringForClip(clipId, timelineState.currentPositionUs)
     }
 
     fun selectClip(clipId: String?) {
