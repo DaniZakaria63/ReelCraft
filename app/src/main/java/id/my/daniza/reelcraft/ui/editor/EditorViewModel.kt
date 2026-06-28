@@ -17,6 +17,7 @@ import id.my.daniza.reelcraft.model.Project
 import id.my.daniza.reelcraft.model.TextOverlay
 import id.my.daniza.reelcraft.model.TimelineState
 import java.util.UUID
+import kotlin.random.Random
 
 enum class EditorTool {
     SELECT, TRIM, SPLIT, EFFECTS, TEXT, AUDIO, SPEED, TRANSITIONS
@@ -116,11 +117,18 @@ class EditorViewModel : ViewModel() {
     fun addEffect(presetId: String) {
         val clipId = timelineState.selectedClipId ?: project?.clips?.firstOrNull()?.id ?: return
         val preset = Presets.byId(presetId) ?: return
+
+        val params = if (PresetEngine.isSegmentEffect(presetId)) {
+            // Generate 8 random float params for the C++ effect engine
+            FloatArray(8) { Random.nextFloat() }
+        } else null
+
         val effect = AppliedEffect(
             id = UUID.randomUUID().toString(),
             presetId = presetId,
             maskType = if (preset.tier >= 1) MaskType.Foreground else MaskType.WholeFrame,
-            intensity = 1f
+            intensity = 1f,
+            params = params
         )
         project = project?.let { p ->
             p.copy(clips = p.clips.map { clip ->
