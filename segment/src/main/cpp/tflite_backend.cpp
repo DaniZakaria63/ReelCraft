@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "tensorflow/lite/core/c/c_api.h"
+#include "tflite/core/c/c_api.h"
 
 struct TFLiteBackend {
     TfLiteModel* model = nullptr;

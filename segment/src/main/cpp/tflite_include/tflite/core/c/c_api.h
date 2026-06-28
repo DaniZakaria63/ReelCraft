@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 // WARNING: Users of TensorFlow Lite should not include this file directly, but
-// should instead include "third_party/tensorflow/lite/c/c_api.h".
+// should instead include "tflite/c/c_api.h".
 // Only the TensorFlow Lite implementation itself should include this file
 // directly.
 
@@ -25,10 +25,10 @@ limitations under the License.
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "tensorflow/lite/builtin_ops.h"
-#include "tensorflow/lite/core/async/c/types.h"
-#include "tensorflow/lite/core/c/c_api_types.h"  // IWYU pragma: export
-#include "tensorflow/lite/core/c/operator.h"  // IWYU pragma: export
+#include "tflite/builtin_ops.h"
+#include "tflite/core/async/c/types.h"
+#include "tflite/core/c/c_api_types.h"  // IWYU pragma: export
+#include "tflite/core/c/operator.h"  // IWYU pragma: export
 
 /// C API for TensorFlow Lite.
 ///
@@ -80,7 +80,7 @@ limitations under the License.
 // NOLINTBEGIN(whitespace/line_length)
 /// \note Users of TensorFlow Lite should use
 /// \code
-/// #include "tensorflow/lite/c/c_api.h"
+/// #include "tflite/c/c_api.h"
 /// \endcode
 /// to access the APIs documented on this page.
 // NOLINTEND(whitespace/line_length)
@@ -212,6 +212,8 @@ TFL_CAPI_EXPORT extern TfLiteModel* TfLiteModelCreateFromFileWithErrorReporter(
     void* user_data);
 
 /// Destroys the model instance.
+///
+/// If `model` is a null pointer, this function has no effect.
 TFL_CAPI_EXPORT extern void TfLiteModelDelete(TfLiteModel* model);
 
 /// Returns a new interpreter options instances.
@@ -226,6 +228,8 @@ TFL_CAPI_EXPORT extern TfLiteInterpreterOptions* TfLiteInterpreterOptionsCopy(
     const TfLiteInterpreterOptions* from);
 
 /// Destroys the interpreter options instance.
+///
+/// If `options` is a null pointer, this function has no effect.
 TFL_CAPI_EXPORT extern void TfLiteInterpreterOptionsDelete(
     TfLiteInterpreterOptions* options);
 
@@ -309,6 +313,8 @@ TFL_CAPI_EXPORT extern TfLiteInterpreter* TfLiteInterpreterCreate(
     const TfLiteModel* model, const TfLiteInterpreterOptions* optional_options);
 
 /// Destroys the interpreter.
+///
+/// If `interpreter` is a null pointer, this function has no effect.
 TFL_CAPI_EXPORT extern void TfLiteInterpreterDelete(
     TfLiteInterpreter* interpreter);
 
@@ -641,6 +647,8 @@ TFL_CAPI_EXPORT extern TfLiteStatus TfLiteTensorCopyToBuffer(
     size_t output_data_size);
 
 /// Destroys the signature runner.
+///
+/// If `signature_runner` is a null pointer, this function has no effect.
 TFL_CAPI_EXPORT extern void TfLiteSignatureRunnerDelete(
     TfLiteSignatureRunner* signature_runner);
 
