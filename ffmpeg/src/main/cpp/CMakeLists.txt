@@ -32,7 +32,12 @@ set_target_properties(swresample PROPERTIES
         IMPORTED_LOCATION ${JNI_LIBS_DIR}/libswresample.so)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED
-        ffmpeg.cpp)
+        jni_bridge.cpp
+        decoder.cpp
+        encoder.cpp
+        filter_graph.cpp
+        compositor.cpp
+        temporal.cpp)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ../../../../ffmpeg/src/main/cpp/ffmpeg/include)
