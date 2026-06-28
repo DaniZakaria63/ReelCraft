@@ -1,7 +1,9 @@
 #include <jni.h>
 #include <cstdint>
+#include <cstring>
 
 #include "sinet.h"
+#include "effects.h"
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_id_my_daniza_segment_NativeSegment_nativeLoadModel(
@@ -37,4 +39,40 @@ Java_id_my_daniza_segment_NativeSegment_nativeSegmentFrame(
     if (!rgba || !mask) return false;
 
     return sinet_segment(sm, (const uint8_t*)rgba, width, height, (float*)mask);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_id_my_daniza_segment_NativeSegment_nativeGenerateEffectParams(
+    JNIEnv* env, jclass, jint effect_type, jobject params_buffer)
+{
+    if (!params_buffer) return;
+    void* data = env->GetDirectBufferAddress(params_buffer);
+    if (!data) return;
+    jlong cap = env->GetDirectBufferCapacity(params_buffer);
+    if (cap < (jlong)sizeof(EffectParams)) return;
+
+    auto* p = reinterpret_cast<EffectParams*>(data);
+    std::memset(p, 0, sizeof(EffectParams));
+    effects_generate_params(static_cast<SegmentEffect>(effect_type), p);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_id_my_daniza_segment_NativeSegment_nativeApplyEffect(
+    JNIEnv* env, jclass,
+    jobject params_buffer,
+    jobject rgba_buffer, jint width, jint height,
+    jobject mask_buffer,
+    jobject out_buffer)
+{
+    if (!params_buffer || !rgba_buffer || !mask_buffer || !out_buffer) return false;
+
+    EffectParams* p = reinterpret_cast<EffectParams*>(env->GetDirectBufferAddress(params_buffer));
+    if (!p) return false;
+
+    uint8_t* rgba = (uint8_t*)env->GetDirectBufferAddress(rgba_buffer);
+    float* mask = (float*)env->GetDirectBufferAddress(mask_buffer);
+    uint8_t* out = (uint8_t*)env->GetDirectBufferAddress(out_buffer);
+    if (!rgba || !mask || !out) return false;
+
+    return effect_apply(*p, rgba, mask, out, width, height);
 }

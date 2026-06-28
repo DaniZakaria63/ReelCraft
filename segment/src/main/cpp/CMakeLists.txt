@@ -35,6 +35,7 @@ set_target_properties(litert_runtime PROPERTIES
 add_library(${CMAKE_PROJECT_NAME} SHARED
         tflite_backend.cpp
         sinet.cpp
+        effects.cpp
         jni_bridge.cpp)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
