@@ -7,6 +7,45 @@ import id.my.daniza.reelcraft.model.Presets
 
 object PresetEngine {
 
+    // Segment effect type constants (must match SegmentEffect enum in effects.h)
+    const val EFFECT_BACKGROUND_REPLACE = 0
+    const val EFFECT_INK_SPLASH = 1
+    const val EFFECT_CYBERPUNK_GRID = 2
+    const val EFFECT_GLITCH_BACKGROUND = 3
+    const val EFFECT_PIXELATE_BACKGROUND = 4
+    const val EFFECT_GLOW_SILHOUETTE = 5
+    const val EFFECT_NEON_OUTLINE = 6
+    const val EFFECT_VAN_GOGH = 7
+    const val EFFECT_DRAMATIC = 8
+    const val EFFECT_COLOR_POP = 9
+    const val EFFECT_DREAMY = 10
+    const val EFFECT_GOLDEN_HOUR = 11
+    const val EFFECT_DOUBLE_EXPOSURE = 12
+
+    private val segmentEffectIds = mapOf(
+        "bg_replace" to EFFECT_BACKGROUND_REPLACE,
+        "ink_splash" to EFFECT_INK_SPLASH,
+        "cyberpunk_grid" to EFFECT_CYBERPUNK_GRID,
+        "glitch_bg" to EFFECT_GLITCH_BACKGROUND,
+        "pixelate_bg" to EFFECT_PIXELATE_BACKGROUND,
+        "glow_silhouette" to EFFECT_GLOW_SILHOUETTE,
+        "neon_outline" to EFFECT_NEON_OUTLINE,
+        "van_gogh" to EFFECT_VAN_GOGH,
+        "dramatic" to EFFECT_DRAMATIC,
+        "color_pop" to EFFECT_COLOR_POP,
+        "dreamy" to EFFECT_DREAMY,
+        "golden_hour" to EFFECT_GOLDEN_HOUR,
+        "double_exposure" to EFFECT_DOUBLE_EXPOSURE,
+    )
+
+    fun isSegmentEffect(presetId: String): Boolean {
+        return presetId in segmentEffectIds
+    }
+
+    fun getSegmentEffectType(presetId: String): Int {
+        return segmentEffectIds[presetId] ?: -1
+    }
+
     fun buildFilterString(
         effects: List<AppliedEffect>,
         intensity: Float = 1f
@@ -18,7 +57,7 @@ object PresetEngine {
 
         for (effect in active) {
             val preset = Presets.byId(effect.presetId) ?: continue
-            if (preset.tier > 0 || preset.filterDesc.isBlank()) continue
+            if (preset.tier > 0) continue // segment/neural effects handled separately
 
             val scaled = effect.intensity
             val desc = if (scaled < 0.99f && containsBlendableParams(preset.filterDesc)) {

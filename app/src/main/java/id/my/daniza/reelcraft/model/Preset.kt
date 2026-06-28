@@ -184,17 +184,44 @@ object Presets {
             PresetCategory.Aesthetic, Icons.Default.ColorLens, 0,
             "curves=r='0/0.1 1/0.9':g='0/0.05 1/0.95':b='0/0.3 1/0.7'"),
 
-        // ─── Portrait (Tier 1 — needs SINet) ────────────────────────────
+        // ══════════════════════════════════════════════════════════════════
+        //  PHASE 1 — Background Effects (SINet mask → effect on bg only)
+        // ══════════════════════════════════════════════════════════════════
+        // Each generates random colors/params at apply time for unique results.
+        Preset("bg_replace", "Background Replace", "Replace background with random gradient",
+            PresetCategory.Portrait, Icons.Default.Person, 1, "bg_replace"),
+        Preset("ink_splash", "Ink Splash", "Ink splatter effect on background",
+            PresetCategory.Portrait, Icons.Default.WaterDrop, 1, "ink_splash"),
+        Preset("cyberpunk_grid", "Cyberpunk Grid", "Neon grid lines on background",
+            PresetCategory.Portrait, Icons.Default.Person, 1, "cyberpunk_grid"),
+        Preset("glitch_bg", "Glitch Background", "Digital glitch distortion on background only",
+            PresetCategory.Portrait, Icons.Default.Bolt, 1, "glitch_bg"),
+        Preset("pixelate_bg", "Pixelate Background", "Mosaic pixelation on background",
+            PresetCategory.Portrait, Icons.Default.GridOn, 1, "pixelate_bg"),
+
+        // ══════════════════════════════════════════════════════════════════
+        //  PHASE 2 — Person Effects (SINet mask → effect on person only)
+        // ══════════════════════════════════════════════════════════════════
+        Preset("glow_silhouette", "Glow Silhouette", "Glowing edge around person silhouette",
+            PresetCategory.Portrait, Icons.Default.Star, 1, "glow_silhouette"),
+        Preset("neon_outline", "Neon Outline", "Vibrant neon outline tracing the person",
+            PresetCategory.Portrait, Icons.Default.FlashOn, 1, "neon_outline"),
         Preset("van_gogh", "Van Gogh Portrait", "Impressionist brush strokes on person",
-            PresetCategory.Portrait, Icons.Default.Person, 1, ""),
-        Preset("cyberpunk", "Cyberpunk", "Neon city colors on background",
-            PresetCategory.Portrait, Icons.Default.Person, 1, ""),
-        Preset("silhouette", "Silhouette Glow", "Person as silhouette with glowing edge",
-            PresetCategory.Portrait, Icons.Default.Brush, 1, ""),
-        Preset("ghost_trail", "Ghost Trail", "Motion trail effect on person",
-            PresetCategory.Portrait, Icons.Default.FlashOn, 1, ""),
-        Preset("ink_splash", "Ink Splash", "Ink bleed effect on background",
-            PresetCategory.Artistic, Icons.Default.WaterDrop, 1, ""),
+            PresetCategory.Portrait, Icons.Default.Brush, 1, "van_gogh"),
+
+        // ══════════════════════════════════════════════════════════════════
+        //  PHASE 3 — Combined Effects (different treatment per area)
+        // ══════════════════════════════════════════════════════════════════
+        Preset("dramatic", "Dramatic", "High contrast person + moody background",
+            PresetCategory.Portrait, Icons.Default.ColorLens, 1, "dramatic"),
+        Preset("color_pop", "Color Pop", "Vibrant person over black & white background",
+            PresetCategory.Portrait, Icons.Default.Palette, 1, "color_pop"),
+        Preset("dreamy", "Dreamy", "Soft glow on person with cool tones in background",
+            PresetCategory.Portrait, Icons.Default.Star, 1, "dreamy"),
+        Preset("golden_hour", "Golden Hour", "Warm golden person against cool background",
+            PresetCategory.Portrait, Icons.Default.Landscape, 1, "golden_hour"),
+        Preset("double_exposure", "Double Exposure", "Overlay pattern blended with person mask",
+            PresetCategory.Portrait, Icons.Default.PhotoFilter, 1, "double_exposure"),
 
         // ─── Neural (Tier 2) ────────────────────────────────────────────
         Preset("neural_style", "Neural Style", "Deep learning style transfer",
