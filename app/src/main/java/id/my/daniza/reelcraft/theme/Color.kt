@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.screen.theme
+package id.my.daniza.reelcraft.theme
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF1F252A)

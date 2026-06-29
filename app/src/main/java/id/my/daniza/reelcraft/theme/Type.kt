@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.screen.theme
+package id.my.daniza.reelcraft.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontFamily

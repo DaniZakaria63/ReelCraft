@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.ui.navigation
+package id.my.daniza.reelcraft.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -6,23 +6,23 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import id.my.daniza.reelcraft.ui.editor.EditorScreen
+import id.my.daniza.reelcraft.screen.editor.EditorScreen
 import id.my.daniza.reelcraft.ui.export.ExportScreen
-import id.my.daniza.reelcraft.ui.home.HomeScreen
+import id.my.daniza.reelcraft.screen.home.HomeScreen
 
 @Composable
 fun ReelCraftNavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Routes.HOME) {
-        composable(Routes.HOME) {
+    NavHost(navController = navController, startDestination = Screen.Home.route) {
+        composable(Screen.Home.route) {
             HomeScreen(
                 onOpenProject = { projectId ->
-                    navController.navigate(Routes.editor(projectId))
+                    navController.navigate(Screen.Editor.createRoute(projectId))
                 }
             )
         }
 
         composable(
-            route = Routes.EDITOR,
+            route = Screen.Editor.ROUTE_WITH_ARGS,
             arguments = listOf(navArgument("projectId") { type = NavType.StringType })
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
@@ -30,13 +30,13 @@ fun ReelCraftNavGraph(navController: NavHostController) {
                 projectId = projectId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToExport = {
-                    navController.navigate(Routes.export(projectId))
+                    navController.navigate(Screen.Export.createRoute(projectId))
                 }
             )
         }
 
         composable(
-            route = Routes.EXPORT,
+            route = Screen.Export.ROUTE_WITH_ARGS,
             arguments = listOf(navArgument("projectId") { type = NavType.StringType })
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getString("projectId") ?: return@composable
@@ -44,8 +44,8 @@ fun ReelCraftNavGraph(navController: NavHostController) {
                 projectId = projectId,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateHome = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 }
             )

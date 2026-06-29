@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.screen.navigation
+package id.my.daniza.reelcraft.navigation
 
 sealed class Screen(val route: String) {
     data object Home : Screen("home")

@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.screen.theme
+package id.my.daniza.reelcraft.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

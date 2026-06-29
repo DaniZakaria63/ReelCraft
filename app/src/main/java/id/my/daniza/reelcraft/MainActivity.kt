@@ -5,9 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
-import id.my.daniza.reelcraft.ui.navigation.ReelCraftNavGraph
-import id.my.daniza.reelcraft.ui.theme.ReelCraftTheme
+import dagger.hilt.android.AndroidEntryPoint
+import id.my.daniza.reelcraft.navigation.ReelCraftNavGraph
+import id.my.daniza.reelcraft.theme.ReelCraftTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
