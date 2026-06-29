@@ -5,9 +5,11 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import id.my.daniza.reelcraft.data.DummyProjects
 import id.my.daniza.reelcraft.engine.PresetEngine
+import id.my.daniza.segment.SegmentEngine
 import id.my.daniza.reelcraft.model.AppliedEffect
 import id.my.daniza.reelcraft.model.Clip
 import id.my.daniza.reelcraft.model.MaskType
@@ -31,7 +33,9 @@ sealed class BottomSheetContent {
     data object Music : BottomSheetContent()
 }
 
-class EditorViewModel : ViewModel() {
+class EditorViewModel(application: Application) : AndroidViewModel(application) {
+
+    val segmentEngine: SegmentEngine = SegmentEngine(application)
 
     var project by mutableStateOf<Project?>(null)
         private set
@@ -48,7 +52,19 @@ class EditorViewModel : ViewModel() {
     var isBottomSheetExpanded by mutableStateOf(false)
         private set
 
+    var segmentReady by mutableStateOf(false)
+        private set
+
     private var nextClipNumber = 100
+
+    init {
+        segmentReady = segmentEngine.loadAll()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        segmentEngine.closeAll()
+    }
 
     fun loadProject(projectId: String) {
         val found = DummyProjects.projectById(projectId)
