@@ -1,25 +1,23 @@
-package id.my.daniza.reelcraft.ui.editor
+package id.my.daniza.reelcraft.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import android.app.Application
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import id.my.daniza.ffmpeg.NativeFFmpeg
 import id.my.daniza.reelcraft.data.DummyProjects
 import id.my.daniza.reelcraft.engine.PresetEngine
-import id.my.daniza.segment.SegmentEngine
-import id.my.daniza.reelcraft.model.AppliedEffect
-import id.my.daniza.reelcraft.model.Clip
-import id.my.daniza.reelcraft.model.MaskType
-import id.my.daniza.reelcraft.model.MusicTrack
-import id.my.daniza.reelcraft.model.Presets
 import id.my.daniza.reelcraft.model.Project
 import id.my.daniza.reelcraft.model.TextOverlay
-import id.my.daniza.reelcraft.model.TimelineState
+import id.my.daniza.reelcraft.model.Transition
+import id.my.daniza.segment.SegmentEngine
 import java.util.UUID
+import kotlin.collections.plus
 import kotlin.random.Random
+
+private const val MAX_UNDO = 50
 
 enum class EditorTool {
     SELECT, TRIM, SPLIT, EFFECTS, TEXT, AUDIO, SPEED, TRANSITIONS
@@ -31,6 +29,7 @@ sealed class BottomSheetContent {
     data class Effects(val clipId: String, val effectId: String? = null) : BottomSheetContent()
     data class TextEditor(val textOverlay: TextOverlay, val clipId: String) : BottomSheetContent()
     data object Music : BottomSheetContent()
+    data class Transitions(val clipId: String) : BottomSheetContent()
 }
 
 class EditorViewModel(application: Application) : AndroidViewModel(application) {
@@ -40,7 +39,7 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     var project by mutableStateOf<Project?>(null)
         private set
 
-    var timelineState by mutableStateOf(TimelineState())
+    var timelineState by mutableStateOf()
         private set
 
     var currentTool by mutableStateOf(EditorTool.SELECT)
@@ -55,10 +54,65 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     var segmentReady by mutableStateOf(false)
         private set
 
+    var ffmpegReady by mutableStateOf(false)
+        private set
+
+    var initError by mutableStateOf<String?>(null)
+        private set
+
+    var canUndo by mutableStateOf(false)
+        private set
+
+    var canRedo by mutableStateOf(false)
+        private set
+
     private var nextClipNumber = 100
 
+    private val undoStack = mutableListOf<Project>()
+    private val redoStack = mutableListOf<Project>()
+
     init {
-        segmentReady = segmentEngine.loadAll()
+        loadEngines()
+    }
+
+    private fun loadEngines() {
+        // FFmpeg — synchronous, throws on failure
+        try {
+            val ffOk = NativeFFmpeg.verifyFFmpeg()
+            ffmpegReady = ffOk
+            Log.i("EditorViewModel", "FFmpeg verified: $ffOk")
+            if (!ffOk) initError = "FFmpeg library loaded but filter graph test failed"
+        } catch (e: UnsatisfiedLinkError) {
+            ffmpegReady = false
+            val msg = "FFmpeg native library not found: ${e.message}"
+            Log.e("EditorViewModel", msg)
+            initError = msg
+        } catch (e: Exception) {
+            ffmpegReady = false
+            val msg = "FFmpeg verification failed: ${e.message}"
+            Log.e("EditorViewModel", msg, e)
+            initError = msg
+        }
+
+        // Segment — load models on background thread to avoid blocking UI
+        val mainHandler = Handler(Looper.getMainLooper())
+        Thread {
+            try {
+                val loaded = segmentEngine.loadAll()
+                mainHandler.post {
+                    segmentReady = loaded
+                    Log.i("EditorViewModel", "Segment models loaded: $loaded (sinet=${segmentEngine.isLoaded}, mediapipe=${segmentEngine.isMediapipeLoaded})")
+                    if (!loaded && initError == null) initError = "Failed to load segmentation models"
+                }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    segmentReady = false
+                    val msg = "Segment model loading failed: ${e.message}"
+                    Log.e("EditorViewModel", msg, e)
+                    initError = msg
+                }
+            }
+        }.apply { name = "segment-loader"; start() }
     }
 
     override fun onCleared() {
@@ -66,12 +120,39 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
         segmentEngine.closeAll()
     }
 
+    private fun saveState() {
+        val p = project ?: return
+        if (undoStack.size >= MAX_UNDO) undoStack.removeAt(0)
+        undoStack.add(p.copy(clips = p.clips.map { it.copy() }))
+        redoStack.clear()
+        canUndo = true
+        canRedo = false
+    }
+
+    fun undo() {
+        val p = project ?: return
+        val prev = undoStack.removeLastOrNull() ?: return
+        redoStack.add(p.copy(clips = p.clips.map { it.copy() }))
+        project = prev
+        canUndo = undoStack.isNotEmpty()
+        canRedo = true
+    }
+
+    fun redo() {
+        val p = project ?: return
+        val next = redoStack.removeLastOrNull() ?: return
+        undoStack.add(p.copy(clips = p.clips.map { it.copy() }))
+        project = next
+        canUndo = true
+        canRedo = redoStack.isNotEmpty()
+    }
+
     fun loadProject(projectId: String) {
         val found = DummyProjects.projectById(projectId)
         if (found != null) {
             project = found
             timelineState = timelineState.copy(
-                durationUs = found.durationUs,
+                durationUs = found.effectiveDurationUs,
                 currentPositionUs = 0L
             )
         }
@@ -98,6 +179,10 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
                 addTextOverlay(clipId)
             }
             EditorTool.AUDIO -> showMusicPicker()
+            EditorTool.TRANSITIONS -> {
+                val clipId = timelineState.selectedClipId ?: project?.clips?.firstOrNull()?.id ?: return
+                showTransitions(clipId)
+            }
             EditorTool.SELECT -> hideBottomSheet()
             else -> hideBottomSheet()
         }
@@ -121,9 +206,7 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
 
     fun selectClip(clipId: String?) {
         timelineState = timelineState.copy(selectedClipId = clipId)
-        if (clipId != null) {
-            showClipProperties(clipId)
-        }
+        if (clipId != null) showClipProperties(clipId)
     }
 
     fun setZoom(zoom: Float) {
@@ -131,11 +214,11 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun addEffect(presetId: String) {
+        saveState()
         val clipId = timelineState.selectedClipId ?: project?.clips?.firstOrNull()?.id ?: return
         val preset = Presets.byId(presetId) ?: return
 
         val params = if (PresetEngine.isSegmentEffect(presetId)) {
-            // Generate 8 random float params for the C++ effect engine
             FloatArray(8) { Random.nextFloat() }
         } else null
 
@@ -156,6 +239,7 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun removeEffect(effectId: String) {
+        saveState()
         val clipId = timelineState.selectedClipId ?: return
         project = project?.let { p ->
             p.copy(clips = p.clips.map { clip ->
@@ -178,21 +262,25 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun updateClipTrim(clipId: String, trimStartUs: Long, trimEndUs: Long) {
+        saveState()
         project = project?.let { p ->
             p.copy(clips = p.clips.map { clip ->
                 if (clip.id == clipId) clip.copy(trimStartUs = trimStartUs, trimEndUs = trimEndUs)
                 else clip
             })
         }
+        syncDuration()
     }
 
     fun updateClipSpeed(clipId: String, speed: Float) {
+        saveState()
         project = project?.let { p ->
             p.copy(clips = p.clips.map { clip ->
                 if (clip.id == clipId) clip.copy(speed = speed.coerceIn(0.1f, 4f))
                 else clip
             })
         }
+        syncDuration()
     }
 
     fun updateClipVolume(clipId: String, volume: Float) {
@@ -204,7 +292,19 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun updateClipTransition(clipId: String, transition: Transition) {
+        saveState()
+        project = project?.let { p ->
+            p.copy(clips = p.clips.map { clip ->
+                if (clip.id == clipId) clip.copy(transitionOut = transition)
+                else clip
+            })
+        }
+        syncDuration()
+    }
+
     fun splitClip(clipId: String, splitPositionUs: Long) {
+        saveState()
         val clip = project?.clips?.find { it.id == clipId } ?: return
         val clipDuration = clip.trimEndUs - clip.trimStartUs
         if (clipDuration < 2_000_000L) return
@@ -227,9 +327,11 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
             }
             p.copy(clips = mutable)
         }
+        syncDuration()
     }
 
     fun addTextOverlay(clipId: String) {
+        saveState()
         val textOverlay = TextOverlay(
             id = UUID.randomUUID().toString(),
             text = "Double tap to edit",
@@ -246,6 +348,7 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun updateTextOverlay(clipId: String, textOverlay: TextOverlay) {
+        saveState()
         project = project?.let { p ->
             p.copy(clips = p.clips.map { clip ->
                 if (clip.id == clipId) clip.copy(textOverlays = clip.textOverlays.map { t ->
@@ -256,6 +359,7 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun removeTextOverlay(clipId: String, overlayId: String) {
+        saveState()
         project = project?.let { p ->
             p.copy(clips = p.clips.map { clip ->
                 if (clip.id == clipId) clip.copy(textOverlays = clip.textOverlays.filter { it.id != overlayId })
@@ -269,6 +373,7 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun reorderClips(fromIndex: Int, toIndex: Int) {
+        saveState()
         project = project?.let { p ->
             val mutable = p.clips.toMutableList()
             val item = mutable.removeAt(fromIndex)
@@ -278,38 +383,25 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun showPresets() {
-        bottomSheetContent = BottomSheetContent.Presets
-        isBottomSheetExpanded = true
+    fun getActiveTransition(clipId: String): Transition? {
+        val idx = project?.clips?.indexOfFirst { it.id == clipId } ?: return null
+        if (idx < 0 || idx >= (project?.clips?.size ?: 0) - 1) return null
+        return project?.clips?.get(idx)?.transitionOut
     }
 
-    fun showClipProperties(clipId: String) {
-        bottomSheetContent = BottomSheetContent.ClipProperties(clipId)
-        isBottomSheetExpanded = true
+    private fun syncDuration() {
+        val effective = project?.effectiveDurationUs ?: return
+        timelineState = timelineState.copy(durationUs = effective)
     }
 
-    fun showEffectList(clipId: String) {
-        bottomSheetContent = BottomSheetContent.Effects(clipId)
-        isBottomSheetExpanded = true
-    }
+    // ─── Bottom sheet navigation ────────────────────────────────────────
 
-    fun showEffectDetail(clipId: String, effectId: String) {
-        bottomSheetContent = BottomSheetContent.Effects(clipId, effectId)
-        isBottomSheetExpanded = true
-    }
-
-    fun showTextEditor(textOverlay: TextOverlay, clipId: String) {
-        bottomSheetContent = BottomSheetContent.TextEditor(textOverlay, clipId)
-        isBottomSheetExpanded = true
-    }
-
-    fun showMusicPicker() {
-        bottomSheetContent = BottomSheetContent.Music
-        isBottomSheetExpanded = true
-    }
-
-    fun hideBottomSheet() {
-        bottomSheetContent = null
-        isBottomSheetExpanded = false
-    }
+    fun showPresets() { bottomSheetContent = BottomSheetContent.Presets; isBottomSheetExpanded = true }
+    fun showClipProperties(clipId: String) { bottomSheetContent = BottomSheetContent.ClipProperties(clipId); isBottomSheetExpanded = true }
+    fun showEffectList(clipId: String) { bottomSheetContent = BottomSheetContent.Effects(clipId); isBottomSheetExpanded = true }
+    fun showEffectDetail(clipId: String, effectId: String) { bottomSheetContent = BottomSheetContent.Effects(clipId, effectId); isBottomSheetExpanded = true }
+    fun showTextEditor(textOverlay: TextOverlay, clipId: String) { bottomSheetContent = BottomSheetContent.TextEditor(textOverlay, clipId); isBottomSheetExpanded = true }
+    fun showMusicPicker() { bottomSheetContent = BottomSheetContent.Music; isBottomSheetExpanded = true }
+    fun showTransitions(clipId: String) { bottomSheetContent = BottomSheetContent.Transitions(clipId); isBottomSheetExpanded = true }
+    fun hideBottomSheet() { bottomSheetContent = null; isBottomSheetExpanded = false }
 }
