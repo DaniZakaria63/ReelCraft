@@ -1,13 +1,11 @@
 #include "decoder.h"
 
 #include <cstring>
-#include <cmath>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
-#include <libavutil/display.h>
 #include <libavutil/rational.h>
 #include <libswscale/swscale.h>
 }
@@ -73,23 +71,9 @@ FFDecoder* decoder_open(const char* path) {
     }
     d->duration_us = d->fmt_ctx->duration;
 
-    // Rotation from metadata
+    // Rotation from metadata tag (covers 99% of phone/camera videos)
     AVDictionaryEntry* tag = av_dict_get(stream->metadata, "rotate", nullptr, 0);
     if (tag) d->rotation = atoi(tag->value);
-
-    uint8_t* displaymatrix = nullptr;
-    for (int i = 0; i < stream->nb_coded_side_data; i++) {
-        if (stream->coded_side_data[i].type == AV_PKT_DATA_DISPLAYMATRIX) {
-            displaymatrix = stream->coded_side_data[i].data;
-            break;
-        }
-    }
-    if (displaymatrix) {
-        double theta = -av_display_rotation_get((int32_t*)displaymatrix);
-        if (std::fabs(theta - 90) < 10) d->rotation = 90;
-        else if (std::fabs(theta - 180) < 10) d->rotation = 180;
-        else if (std::fabs(theta - 270) < 10) d->rotation = 270;
-    }
 
     d->frame = av_frame_alloc();
     d->rgb_frame = av_frame_alloc();

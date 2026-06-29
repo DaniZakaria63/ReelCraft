@@ -28,6 +28,26 @@ if(NOT EXISTS ${TFLITE_INCLUDE_DIR}/tflite/core/c/c_api.h)
     endif()
 endif()
 
+# Auto-download LiteRT prebuilt .so if missing
+if(NOT EXISTS ${JNI_LIBS_DIR}/libLiteRt.so)
+    find_program(CURL curl)
+    if(CURL)
+        message(STATUS "LiteRT .so not found — downloading from Google Maven...")
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_DIR}/../..
+                    ${CMAKE_SOURCE_DIR}/../../../scripts/download_litert_prebuilts.sh
+            RESULT_VARIABLE DL_RESULT
+        )
+        if(NOT DL_RESULT EQUAL 0)
+            message(FATAL_ERROR "Failed to download LiteRT prebuilts. Run scripts/download_litert_prebuilts.sh manually.")
+        endif()
+    else()
+        message(FATAL_ERROR
+            "LiteRT .so missing at ${JNI_LIBS_DIR}/libLiteRt.so "
+            "and curl not found. Run scripts/download_litert_prebuilts.sh manually.")
+    endif()
+endif()
+
 add_library(litert_runtime SHARED IMPORTED)
 set_target_properties(litert_runtime PROPERTIES
         IMPORTED_LOCATION ${JNI_LIBS_DIR}/libLiteRt.so)
