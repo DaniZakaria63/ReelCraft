@@ -23,7 +23,7 @@ struct FFFilterGraph {
     int height = 0;
 };
 
-FFFilterGraph* filter_graph_create(int width, int height, const char* desc) {
+FFFilterGraph* filter_graph_create(int width, int height, int fps, const char* desc) {
     auto* fg = new FFFilterGraph();
     fg->width = width;
     fg->height = height;
@@ -36,8 +36,8 @@ FFFilterGraph* filter_graph_create(int width, int height, const char* desc) {
 
     char args[256];
     snprintf(args, sizeof(args),
-             "video_size=%dx%d:pix_fmt=%d:time_base=1/30:pixel_aspect=1/1",
-             width, height, AV_PIX_FMT_RGBA);
+             "video_size=%dx%d:pix_fmt=%d:time_base=1/%d:pixel_aspect=1/1",
+             width, height, AV_PIX_FMT_RGBA, fps);
 
     if (avfilter_graph_create_filter(&fg->buffersrc_ctx, buffersrc, "in",
                                       args, nullptr, fg->graph) < 0) {

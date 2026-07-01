@@ -1,10 +1,12 @@
 #include "compositor.h"
 #include <cstdint>
+#include <cmath>
+#include <algorithm>
 
 static inline uint8_t clamp_f(float v) {
     if (v < 0) return 0;
     if (v > 255) return 255;
-    return (uint8_t)v;
+    return (uint8_t)(v + 0.5f);
 }
 
 static void blend_rgba(uint8_t* bg, const uint8_t* fg, int count, float opacity) {
@@ -71,6 +73,53 @@ bool composite_checkerboard(uint8_t* rgba, int width, int height,
             rgba[idx + 1] = v;
             rgba[idx + 2] = v;
             rgba[idx + 3] = 0xFF;
+        }
+    }
+    return true;
+}
+
+bool composite_crossfade(const uint8_t* frame_a, const uint8_t* frame_b,
+                          uint8_t* out, int width, int height, float progress) {
+    if (!frame_a || !frame_b || !out) return false;
+    float a = std::max(0.0f, std::min(1.0f, progress));
+    float inv_a = 1.0f - a;
+    int count = width * height;
+    for (int i = 0; i < count; i++) {
+        int idx = i * 4;
+        out[idx + 0] = clamp_f(frame_a[idx + 0] * inv_a + frame_b[idx + 0] * a);
+        out[idx + 1] = clamp_f(frame_a[idx + 1] * inv_a + frame_b[idx + 1] * a);
+        out[idx + 2] = clamp_f(frame_a[idx + 2] * inv_a + frame_b[idx + 2] * a);
+        out[idx + 3] = 255;
+    }
+    return true;
+}
+
+bool composite_wipe(const uint8_t* frame_a, const uint8_t* frame_b,
+                     uint8_t* out, int width, int height, float progress,
+                     int direction) {
+    if (!frame_a || !frame_b || !out) return false;
+    float p = std::max(0.0f, std::min(1.0f, progress));
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int idx = (y * width + x) * 4;
+            float edge;
+            switch (direction) {
+                case 0: edge = (float)x / (float)width; break;
+                case 1: edge = 1.0f - (float)x / (float)width; break;
+                case 2: edge = (float)y / (float)height; break;
+                case 3: edge = 1.0f - (float)y / (float)height; break;
+                default: edge = (float)x / (float)width; break;
+            }
+            if (edge < p) {
+                out[idx + 0] = frame_b[idx + 0];
+                out[idx + 1] = frame_b[idx + 1];
+                out[idx + 2] = frame_b[idx + 2];
+            } else {
+                out[idx + 0] = frame_a[idx + 0];
+                out[idx + 1] = frame_a[idx + 1];
+                out[idx + 2] = frame_a[idx + 2];
+            }
+            out[idx + 3] = 255;
         }
     }
     return true;

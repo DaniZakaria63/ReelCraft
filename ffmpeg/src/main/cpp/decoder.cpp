@@ -90,8 +90,11 @@ void decoder_close(FFDecoder* d) {
     if (!d) return;
     av_frame_free(&d->frame);
     if (d->rgb_frame) {
-        av_freep(&d->rgb_frame->data[0]);
         av_frame_free(&d->rgb_frame);
+    }
+    if (d->rgb_buffer) {
+        av_free(d->rgb_buffer);
+        d->rgb_buffer = nullptr;
     }
     avcodec_free_context(&d->codec_ctx);
     avformat_close_input(&d->fmt_ctx);
@@ -114,9 +117,7 @@ int decoder_rotation(FFDecoder* d) { return d ? d->rotation : 0; }
 bool decoder_seek(FFDecoder* d, int64_t timestamp_us) {
     if (!d) return false;
     int64_t ts = av_rescale_q(timestamp_us, (AVRational){1, 1000000}, d->time_base);
-    if (av_seek_frame(d->fmt_ctx, d->stream_idx, ts, AVSEEK_FLAG_BACKWARD) < 0) {
-        av_seek_frame(d->fmt_ctx, d->stream_idx, ts, AVSEEK_FLAG_BACKWARD);
-    }
+    av_seek_frame(d->fmt_ctx, d->stream_idx, ts, AVSEEK_FLAG_BACKWARD);
     avcodec_flush_buffers(d->codec_ctx);
     return true;
 }

@@ -7,6 +7,16 @@
 #include "compositor.h"
 #include "temporal.h"
 
+// ─── Verify ────────────────────────────────────────────────────────────────
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_id_my_daniza_ffmpeg_NativeFFmpeg_nativeVerifyFFmpeg(JNIEnv*, jclass) {
+    FFFilterGraph* fg = filter_graph_create(1, 1, 30, "copy");
+    if (!fg) return false;
+    filter_graph_close(fg);
+    return true;
+}
+
 // ─── Decoder JNI ──────────────────────────────────────────────────────────
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -114,10 +124,11 @@ Java_id_my_daniza_ffmpeg_NativeFFmpeg_nativeEncoderFinalize(JNIEnv*, jclass, jlo
 extern "C" JNIEXPORT jlong JNICALL
 Java_id_my_daniza_ffmpeg_NativeFFmpeg_nativeFilterGraphCreate(JNIEnv* env, jclass,
                                                                 jint width, jint height,
+                                                                jint fps,
                                                                 jstring filter_desc) {
     const char* c_desc = env->GetStringUTFChars(filter_desc, nullptr);
     if (!c_desc) return 0;
-    FFFilterGraph* fg = filter_graph_create(width, height, c_desc);
+    FFFilterGraph* fg = filter_graph_create(width, height, fps, c_desc);
     env->ReleaseStringUTFChars(filter_desc, c_desc);
     return reinterpret_cast<jlong>(fg);
 }
@@ -185,6 +196,39 @@ Java_id_my_daniza_ffmpeg_NativeFFmpeg_nativeCompositeCheckerboard(JNIEnv* env, j
     void* b = env->GetDirectBufferAddress(buf);
     if (!b) return false;
     return composite_checkerboard((uint8_t*)b, w, h, tile_size);
+}
+
+// ─── Compositor: Transitions ───────────────────────────────────────────────
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_id_my_daniza_ffmpeg_NativeFFmpeg_nativeCompositeCrossfade(JNIEnv* env, jclass,
+                                                                jobject a_buf,
+                                                                jobject b_buf,
+                                                                jobject out_buf,
+                                                                jint w, jint h,
+                                                                jfloat progress) {
+    void* a = env->GetDirectBufferAddress(a_buf);
+    void* b = env->GetDirectBufferAddress(b_buf);
+    void* out = env->GetDirectBufferAddress(out_buf);
+    if (!a || !b || !out) return false;
+    return composite_crossfade((const uint8_t*)a, (const uint8_t*)b,
+                                (uint8_t*)out, w, h, progress);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_id_my_daniza_ffmpeg_NativeFFmpeg_nativeCompositeWipe(JNIEnv* env, jclass,
+                                                            jobject a_buf,
+                                                            jobject b_buf,
+                                                            jobject out_buf,
+                                                            jint w, jint h,
+                                                            jfloat progress,
+                                                            jint direction) {
+    void* a = env->GetDirectBufferAddress(a_buf);
+    void* b = env->GetDirectBufferAddress(b_buf);
+    void* out = env->GetDirectBufferAddress(out_buf);
+    if (!a || !b || !out) return false;
+    return composite_wipe((const uint8_t*)a, (const uint8_t*)b,
+                           (uint8_t*)out, w, h, progress, direction);
 }
 
 // ─── Temporal JNI ─────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@
 
 struct FFFilterGraph;
 
-FFFilterGraph* filter_graph_create(int width, int height, const char* filter_desc);
+FFFilterGraph* filter_graph_create(int width, int height, int fps, const char* filter_desc);
 void filter_graph_close(FFFilterGraph* fg);
 bool filter_graph_process(FFFilterGraph* fg,
                            const uint8_t* in_rgba, int in_width, int in_height,
