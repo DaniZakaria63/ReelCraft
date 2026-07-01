@@ -3,9 +3,13 @@
 #include <cstddef>
 #include <cstdint>
 
+constexpr int TFLITE_DELEGATE_XNNPACK = 1 << 0;
+constexpr int TFLITE_DELEGATE_NNAPI   = 1 << 1;
+
 struct TFLiteBackend;
 
-TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size);
+TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size,
+                              int delegate_flags = 0);
 void tflite_destroy(TFLiteBackend* tb);
 
 int tflite_input_count(TFLiteBackend* tb);
