@@ -1,5 +1,21 @@
 package id.my.daniza.reelcraft.model
 
+enum class Interpolation {
+    Linear, EaseIn, EaseOut, EaseInOut
+}
+
+data class Keyframe(
+    val positionUs: Long,
+    val intensity: Float,
+    val interpolation: Interpolation = Interpolation.Linear
+)
+
+enum class MaskType(val label: String) {
+    WholeFrame("Full Frame"),
+    Foreground("Person Only"),
+    Background("Background Only")
+}
+
 data class AppliedEffect(
     val id: String,
     val presetId: String,
@@ -31,20 +47,4 @@ data class AppliedEffect(
         result = 31 * result + (params?.contentHashCode() ?: 0)
         return result
     }
-}
-
-enum class MaskType(val label: String) {
-    WholeFrame("Full Frame"),
-    Foreground("Person Only"),
-    Background("Background Only")
-}
-
-data class Keyframe(
-    val positionUs: Long,
-    val intensity: Float,
-    val interpolation: Interpolation = Interpolation.Linear
-)
-
-enum class Interpolation {
-    Linear, EaseIn, EaseOut, EaseInOut
 }

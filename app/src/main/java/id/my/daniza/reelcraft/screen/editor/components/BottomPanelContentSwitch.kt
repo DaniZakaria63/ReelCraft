@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.ui.editor.components
+package id.my.daniza.reelcraft.screen.editor.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -10,7 +10,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import id.my.daniza.reelcraft.model.Project
-import id.my.daniza.reelcraft.ui.editor.BottomSheetContent
+import id.my.daniza.reelcraft.viewmodel.BottomSheetContent
 
 @Composable
 fun BottomPanelContentSwitch(
@@ -39,6 +38,7 @@ fun BottomPanelContentSwitch(
     onBackToEffects: (String) -> Unit,
     onDismiss: () -> Unit,
     onShowPresets: () -> Unit,
+    onUpdateTransition: (String, id.my.daniza.reelcraft.model.Transition) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -114,6 +114,16 @@ fun BottomPanelContentSwitch(
                         currentTrack = project.musicTrack,
                         onSetTrack = onSetMusicTrack
                     )
+                }
+                is BottomSheetContent.Transitions -> {
+                    val clips = project.clips.filter { it.id == content.clipId }
+                    if (clips.isNotEmpty()) {
+                        val clip = clips.first()
+                        TransitionsPanel(
+                            currentTransition = clip.transitionOut,
+                            onUpdateTransition = { onUpdateTransition(content.clipId, it) }
+                        )
+                    }
                 }
                 null -> {}
             }

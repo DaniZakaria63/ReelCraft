@@ -9,9 +9,12 @@ data class Clip(
     val volume: Float = 1f,
     val effects: List<AppliedEffect> = emptyList(),
     val textOverlays: List<TextOverlay> = emptyList(),
-    val orderIndex: Int = 0
+    val orderIndex: Int = 0,
+    val transitionOut: Transition? = null
 ) {
     val durationUs: Long get() = trimEndUs - trimStartUs
+
+    val effectiveDurationUs: Long get() = (durationUs.toDouble() / speed).toLong()
 }
 
 data class TextOverlay(

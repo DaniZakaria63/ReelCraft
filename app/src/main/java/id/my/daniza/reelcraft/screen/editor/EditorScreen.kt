@@ -1,9 +1,8 @@
-package id.my.daniza.reelcraft.ui.editor
+package id.my.daniza.reelcraft.screen.editor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,12 +25,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import id.my.daniza.reelcraft.ui.editor.components.BottomPanelContentSwitch
-import id.my.daniza.reelcraft.ui.editor.components.EditorToolbar
-import id.my.daniza.reelcraft.ui.editor.components.PlaybackBar
-import id.my.daniza.reelcraft.ui.editor.components.PreviewPane
-import id.my.daniza.reelcraft.ui.editor.components.TimelineView
+import androidx.hilt.navigation.compose.hiltViewModel
+import id.my.daniza.reelcraft.screen.editor.components.BottomPanelContentSwitch
+import id.my.daniza.reelcraft.screen.editor.components.EditorToolbar
+import id.my.daniza.reelcraft.screen.editor.components.PlaybackBar
+import id.my.daniza.reelcraft.screen.editor.components.PreviewPane
+import id.my.daniza.reelcraft.screen.editor.components.TimelineView
+import id.my.daniza.reelcraft.viewmodel.EditorViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +39,7 @@ fun EditorScreen(
     projectId: String,
     onNavigateBack: () -> Unit,
     onNavigateToExport: () -> Unit,
-    viewModel: EditorViewModel = viewModel()
+    viewModel: EditorViewModel = hiltViewModel()
 ) {
     LaunchedEffect(projectId) {
         viewModel.loadProject(projectId)
@@ -72,10 +72,10 @@ fun EditorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { viewModel.undo() }, enabled = viewModel.canUndo) {
                         Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Undo", modifier = Modifier.padding(4.dp))
                     }
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { viewModel.redo() }, enabled = viewModel.canRedo) {
                         Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Redo", modifier = Modifier.padding(4.dp))
                     }
                     IconButton(onClick = onNavigateToExport) {
@@ -102,7 +102,7 @@ fun EditorScreen(
                 .padding(padding)
         ) {
             PreviewPane(
-                project = project,
+                previewBitmap = viewModel.previewBitmap,
                 isDetailVisible = viewModel.bottomSheetContent != null,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
@@ -136,7 +136,8 @@ fun EditorScreen(
                     onSelectEffect = { clipId, effectId -> viewModel.showEffectDetail(clipId, effectId) },
                     onBackToEffects = { clipId -> viewModel.showEffectList(clipId) },
                     onDismiss = { viewModel.hideBottomSheet() },
-                    onShowPresets = { viewModel.showPresets() }
+                    onShowPresets = { viewModel.showPresets() },
+                    onUpdateTransition = { clipId, transition -> viewModel.updateClipTransition(clipId, transition) }
                 )
             }
 

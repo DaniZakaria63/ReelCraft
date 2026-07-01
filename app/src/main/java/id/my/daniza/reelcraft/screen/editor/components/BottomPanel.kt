@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.ui.editor.components
+package id.my.daniza.reelcraft.screen.editor.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,18 +14,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
@@ -54,6 +48,8 @@ import id.my.daniza.reelcraft.model.MusicTrack
 import id.my.daniza.reelcraft.model.Preset
 import id.my.daniza.reelcraft.model.Presets
 import id.my.daniza.reelcraft.model.TextOverlay
+import id.my.daniza.reelcraft.model.Transition
+import id.my.daniza.reelcraft.model.TransitionType
 
 @Composable
 fun PresetsPanel(
@@ -411,5 +407,58 @@ fun MusicPickerPanel(
                 modifier = Modifier.padding(vertical = 16.dp)
             )
         }
+    }
+}
+
+@Composable
+fun TransitionsPanel(
+    currentTransition: Transition?,
+    onUpdateTransition: (Transition) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            "Transition Out",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+
+        Text(
+            "Type",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TransitionType.entries.forEach { type ->
+                val selected = currentTransition?.type == type
+                Button(
+                    onClick = {
+                        onUpdateTransition(currentTransition?.copy(type = type) ?: Transition(type = type))
+                    },
+                    colors = if (selected) ButtonDefaults.buttonColors()
+                    else ButtonDefaults.outlinedButtonColors(),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(type.label, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+
+        PropertySlider(
+            label = "Duration",
+            value = (currentTransition?.durationUs ?: 500_000L).toFloat() / 2_000_000f,
+            valueRange = 0.1f..1f,
+            displayValue = "${((currentTransition?.durationUs ?: 500_000L) / 1_000_000f)}s",
+            onValueChange = { onUpdateTransition(currentTransition?.copy(durationUs = (it * 2_000_000L).toLong()) ?: Transition(durationUs = (it * 2_000_000L).toLong())) }
+        )
     }
 }

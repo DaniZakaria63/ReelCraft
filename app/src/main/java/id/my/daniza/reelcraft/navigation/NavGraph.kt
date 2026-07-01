@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import id.my.daniza.reelcraft.screen.editor.EditorScreen
-import id.my.daniza.reelcraft.ui.export.ExportScreen
+import id.my.daniza.reelcraft.screen.export.ExportScreen
 import id.my.daniza.reelcraft.screen.home.HomeScreen
 
 @Composable

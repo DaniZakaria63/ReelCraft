@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.ui.editor.components
+package id.my.daniza.reelcraft.screen.editor.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -7,12 +7,10 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ZoomIn
@@ -39,12 +37,13 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import id.my.daniza.reelcraft.model.Clip
-import id.my.daniza.reelcraft.ui.theme.DarkClipBar
-import id.my.daniza.reelcraft.ui.theme.DarkPlayhead
-import id.my.daniza.reelcraft.ui.theme.DarkTimelineBg
-import id.my.daniza.reelcraft.ui.theme.DarkTimelineRuler
 
 private val RULER_HEIGHT_DP = 24.dp
+
+private val DarkTimelineBg = Color(0xFF1A1A1A)
+private val DarkTimelineRuler = Color(0xFF2A2A2A)
+private val DarkClipBar = Color(0xFF3C3C3C)
+private val DarkPlayhead = Color(0xFFFF4444)
 private val CLIP_HEIGHT_DP = 36.dp
 private val TRACK_PADDING_DP = 4.dp
 private val MIN_CLIP_WIDTH_DP = 80.dp
