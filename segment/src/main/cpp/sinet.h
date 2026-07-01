@@ -7,7 +7,8 @@ struct SINetModel;
 
 enum class ModelType { SINet, MediaPipeSelfie };
 
-SINetModel* sinet_create(const uint8_t* model_data, size_t model_size, ModelType type);
+SINetModel* sinet_create(const uint8_t* model_data, size_t model_size, ModelType type,
+                         int delegate_flags = 0);
 void sinet_destroy(SINetModel* sm);
 
 bool sinet_segment(SINetModel* sm,

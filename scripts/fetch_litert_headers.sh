@@ -18,6 +18,8 @@ HEADERS=(
   tflite/core/async/c/types.h
   # transitive dep of c_api_types.h
   tflite/converter/core/c/tflite_types.h
+  # delegate support
+  tflite/delegates/xnnpack/xnnpack_delegate.h
 )
 
 echo "Fetching LiteRT C API headers (ref: $LITERT_REF)..."
