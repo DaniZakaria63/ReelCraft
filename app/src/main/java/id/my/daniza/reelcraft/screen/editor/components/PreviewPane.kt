@@ -1,5 +1,6 @@
-package id.my.daniza.reelcraft.ui.editor.components
+package id.my.daniza.reelcraft.screen.editor.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,12 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import id.my.daniza.reelcraft.model.Project
 
 @Composable
 fun PreviewPane(
-    project: Project,
+    previewBitmap: ImageBitmap?,
     isDetailVisible: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -32,10 +34,19 @@ fun PreviewPane(
             .background(MaterialTheme.colorScheme.surfaceContainer),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            Icons.Default.Movie,
-            contentDescription = "Preview",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-        )
+        if (previewBitmap != null) {
+            Image(
+                bitmap = previewBitmap,
+                contentDescription = "Preview",
+                modifier = Modifier.fillMaxWidth().height(previewHeight),
+                contentScale = ContentScale.Fit
+            )
+        } else {
+            Icon(
+                Icons.Default.Movie,
+                contentDescription = "Preview",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+            )
+        }
     }
 }

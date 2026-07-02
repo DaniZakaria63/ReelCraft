@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.ui.editor.components
+package id.my.daniza.reelcraft.screen.editor.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,7 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import id.my.daniza.reelcraft.ui.editor.EditorTool
+import id.my.daniza.reelcraft.viewmodel.EditorTool
 
 data class ToolItem(
     val tool: EditorTool,

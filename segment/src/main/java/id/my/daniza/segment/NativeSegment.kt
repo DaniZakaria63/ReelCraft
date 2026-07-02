@@ -12,17 +12,16 @@ object NativeSegment {
     const val MODEL_SINET = 0
     const val MODEL_MEDIAPIPE_SELFIE = 1
 
-    // ─── Model lifecycle ──────────────────────────────────────────────────
+    const val DELEGATE_XNNPACK = 1 shl 0
+    const val DELEGATE_NNAPI   = 1 shl 1
 
-    fun loadModel(modelBuffer: ByteBuffer, modelType: Int): Long {
-        return nativeLoadModel(modelBuffer, modelType)
+    fun loadModel(modelBuffer: ByteBuffer, modelType: Int, delegateFlags: Int = 0): Long {
+        return nativeLoadModel(modelBuffer, modelType, delegateFlags)
     }
 
     fun closeModel(handle: Long) {
         nativeCloseModel(handle)
     }
-
-    // ─── SINet segmentation ───────────────────────────────────────────────
 
     fun segmentFrame(
         handle: Long,
@@ -34,13 +33,9 @@ object NativeSegment {
         return nativeSegmentFrame(handle, rgbaBuffer, width, height, maskBuffer)
     }
 
-    // ─── Effect params ────────────────────────────────────────────────────
-
     fun generateEffectParams(effectType: Int, paramsBuffer: ByteBuffer) {
         nativeGenerateEffectParams(effectType, paramsBuffer)
     }
-
-    // ─── Effect apply ─────────────────────────────────────────────────────
 
     fun applyEffect(
         paramsBuffer: ByteBuffer,
@@ -53,9 +48,7 @@ object NativeSegment {
         return nativeApplyEffect(paramsBuffer, rgbaBuffer, width, height, maskBuffer, outBuffer)
     }
 
-    // ─── Native declarations ──────────────────────────────────────────────
-
-    private external fun nativeLoadModel(modelBuffer: ByteBuffer, modelType: Int): Long
+    private external fun nativeLoadModel(modelBuffer: ByteBuffer, modelType: Int, delegateFlags: Int): Long
     private external fun nativeCloseModel(handle: Long)
     private external fun nativeSegmentFrame(
         handle: Long,

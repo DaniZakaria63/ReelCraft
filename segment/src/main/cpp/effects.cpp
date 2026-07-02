@@ -27,7 +27,7 @@ static inline float smoothstep(float edge0, float edge1, float x) {
 }
 
 // Simple LCG random
-static uint32_t rng_state = 12345;
+static thread_local uint32_t rng_state = 12345;
 static void rng_seed(uint32_t s) { rng_state = s; }
 static uint32_t rng_next() {
     rng_state = rng_state * 1103515245 + 12345;

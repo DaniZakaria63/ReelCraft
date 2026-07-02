@@ -8,11 +8,15 @@ object NativeFFmpeg {
         System.loadLibrary("ffmpeg")
     }
 
+    fun verifyFFmpeg(): Boolean = nativeVerifyFFmpeg()
+
     // ─── Decoder ──────────────────────────────────────────────────────────
 
     fun decoderOpen(path: String): Long = nativeDecoderOpen(path)
 
-    fun decoderClose(handle: Long) = nativeDecoderClose(handle)
+    fun decoderClose(handle: Long) {
+        if (handle != 0L) nativeDecoderClose(handle)
+    }
 
     fun decoderWidth(handle: Long): Int = nativeDecoderWidth(handle)
 
@@ -55,8 +59,8 @@ object NativeFFmpeg {
 
     // ─── Filter Graph ─────────────────────────────────────────────────────
 
-    fun filterGraphCreate(width: Int, height: Int, filterDesc: String): Long =
-        nativeFilterGraphCreate(width, height, filterDesc)
+    fun filterGraphCreate(width: Int, height: Int, fps: Int = 30, filterDesc: String): Long =
+        nativeFilterGraphCreate(width, height, fps, filterDesc)
 
     fun filterGraphClose(handle: Long) = nativeFilterGraphClose(handle)
 
@@ -103,8 +107,21 @@ object NativeFFmpeg {
         outBuffer: ByteBuffer, width: Int, height: Int,
     ): Boolean = nativeTemporalBlendFrames(frameA, frameB, factor, outBuffer, width, height)
 
+    // ─── Transitions ───────────────────────────────────────────────────────
+
+    fun compositeCrossfade(
+        frameA: ByteBuffer, frameB: ByteBuffer, outBuffer: ByteBuffer,
+        width: Int, height: Int, progress: Float,
+    ): Boolean = nativeCompositeCrossfade(frameA, frameB, outBuffer, width, height, progress)
+
+    fun compositeWipe(
+        frameA: ByteBuffer, frameB: ByteBuffer, outBuffer: ByteBuffer,
+        width: Int, height: Int, progress: Float, direction: Int,
+    ): Boolean = nativeCompositeWipe(frameA, frameB, outBuffer, width, height, progress, direction)
+
     // ─── Native declarations ──────────────────────────────────────────────
 
+    private external fun nativeVerifyFFmpeg(): Boolean
     private external fun nativeDecoderOpen(path: String): Long
     private external fun nativeDecoderClose(handle: Long)
     private external fun nativeDecoderWidth(handle: Long): Int
@@ -124,7 +141,7 @@ object NativeFFmpeg {
     private external fun nativeEncoderEncodeFrameRgba(handle: Long, buffer: ByteBuffer): Boolean
     private external fun nativeEncoderFinalize(handle: Long): Boolean
 
-    private external fun nativeFilterGraphCreate(width: Int, height: Int, filterDesc: String): Long
+    private external fun nativeFilterGraphCreate(width: Int, height: Int, fps: Int, filterDesc: String): Long
     private external fun nativeFilterGraphClose(handle: Long)
     private external fun nativeFilterGraphProcess(
         handle: Long, inBuffer: ByteBuffer, inWidth: Int, inHeight: Int,
@@ -153,5 +170,14 @@ object NativeFFmpeg {
     private external fun nativeTemporalBlendFrames(
         frameA: ByteBuffer, frameB: ByteBuffer, factor: Float,
         outBuffer: ByteBuffer, width: Int, height: Int,
+    ): Boolean
+
+    private external fun nativeCompositeCrossfade(
+        frameA: ByteBuffer, frameB: ByteBuffer, outBuffer: ByteBuffer,
+        width: Int, height: Int, progress: Float,
+    ): Boolean
+    private external fun nativeCompositeWipe(
+        frameA: ByteBuffer, frameB: ByteBuffer, outBuffer: ByteBuffer,
+        width: Int, height: Int, progress: Float, direction: Int,
     ): Boolean
 }

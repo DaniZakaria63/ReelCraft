@@ -2,8 +2,8 @@ package id.my.daniza.reelcraft.engine
 
 import id.my.daniza.reelcraft.model.AppliedEffect
 import id.my.daniza.reelcraft.model.Interpolation
-import id.my.daniza.reelcraft.model.MaskType
 import id.my.daniza.reelcraft.model.Presets
+import id.my.daniza.reelcraft.model.TextOverlay
 
 object PresetEngine {
 
@@ -139,5 +139,54 @@ object PresetEngine {
         }
 
         return effect.intensity
+    }
+
+    fun buildTextOverlayFilter(
+        overlays: List<TextOverlay>,
+        clipDurationUs: Long
+    ): String? {
+        val active = overlays.filter { it.text.isNotBlank() }
+        if (active.isEmpty()) return null
+
+        val parts = mutableListOf<String>()
+        for (overlay in active) {
+            val enable = overlay.startOffsetUs > 0 || overlay.endOffsetUs > 0
+            val startSec = overlay.startOffsetUs / 1_000_000f
+            val durationSec = if (overlay.endOffsetUs > 0) {
+                (overlay.endOffsetUs - overlay.startOffsetUs) / 1_000_000f
+            } else {
+                (clipDurationUs - overlay.startOffsetUs) / 1_000_000f
+            }
+
+            val escapedText = overlay.text
+                .replace(":", "\\:")
+                .replace("'", "\\'")
+                .replace(",", "\\,")
+
+            val fontSize = overlay.fontSize.coerceIn(12, 200)
+            val posX = overlay.positionX.coerceIn(0f, 1f)
+            val posY = overlay.positionY.coerceIn(0f, 1f)
+            val xPixels = (posX * 1920).toInt() // assume 1920 width for text sizing
+            val yPixels = (posY * 1080).toInt()
+
+            val colorHex = String.format("%06X", overlay.colorArgb and 0xFFFFFF)
+            val alpha = ((overlay.colorArgb shr 24) and 0xFF).coerceIn(0, 255)
+
+            val drawtext = buildString {
+                append("drawtext=")
+                append("text='$escapedText':")
+                append("fontsize=$fontSize:")
+                append("fontcolor=#${colorHex}@${"%.2f".format(alpha / 255f)}:")
+                append("x=${if (posX <= 0.5f) "$xPixels" else "w-tw-$xPixels"}:")
+                append("y=${if (posY <= 0.5f) "$yPixels" else "h-th-$yPixels"}:")
+                append("borderw=1:")
+                append("bordercolor=black@0.4")
+                if (enable) {
+                    append(":enable='between(t,$startSec,$durationSec)'")
+                }
+            }
+            parts.add(drawtext)
+        }
+        return parts.joinToString(",")
     }
 }

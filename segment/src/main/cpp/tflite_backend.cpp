@@ -3,14 +3,22 @@
 #include <cstring>
 
 #include "tflite/core/c/c_api.h"
+#include "tflite/delegates/xnnpack/xnnpack_delegate.h"
+
+extern "C" {
+extern void TfLiteInterpreterOptionsSetUseNNAPI(
+    TfLiteInterpreterOptions* options, bool enable);
+}
 
 struct TFLiteBackend {
     TfLiteModel* model = nullptr;
     TfLiteInterpreterOptions* options = nullptr;
     TfLiteInterpreter* interpreter = nullptr;
+    TfLiteDelegate* xnnpack_delegate = nullptr;
 };
 
-TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size) {
+TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size,
+                              int delegate_flags) {
     if (!model_data || model_size == 0) return nullptr;
     auto* tb = new TFLiteBackend();
 
@@ -19,7 +27,21 @@ TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size) {
 
     tb->options = TfLiteInterpreterOptionsCreate();
     if (!tb->options) { tflite_destroy(tb); return nullptr; }
+
     TfLiteInterpreterOptionsSetNumThreads(tb->options, 2);
+
+    if (delegate_flags & TFLITE_DELEGATE_NNAPI) {
+        TfLiteInterpreterOptionsSetUseNNAPI(tb->options, true);
+    }
+
+    if (delegate_flags & TFLITE_DELEGATE_XNNPACK) {
+        TfLiteXNNPackDelegateOptions opts = TfLiteXNNPackDelegateOptionsDefault();
+        opts.num_threads = 2;
+        tb->xnnpack_delegate = TfLiteXNNPackDelegateCreate(&opts);
+        if (tb->xnnpack_delegate) {
+            TfLiteInterpreterOptionsAddDelegate(tb->options, tb->xnnpack_delegate);
+        }
+    }
 
     tb->interpreter = TfLiteInterpreterCreate(tb->model, tb->options);
     if (!tb->interpreter) { tflite_destroy(tb); return nullptr; }
@@ -37,6 +59,7 @@ void tflite_destroy(TFLiteBackend* tb) {
     TfLiteInterpreterDelete(tb->interpreter);
     TfLiteInterpreterOptionsDelete(tb->options);
     TfLiteModelDelete(tb->model);
+    TfLiteXNNPackDelegateDelete(tb->xnnpack_delegate);
     delete tb;
 }
 

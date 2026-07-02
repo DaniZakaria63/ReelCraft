@@ -1,8 +1,11 @@
 package id.my.daniza.reelcraft.viewmodel
 
+import android.app.Application
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
 import id.my.daniza.reelcraft.data.DummyProjects
 import id.my.daniza.reelcraft.model.Project
 
@@ -23,7 +26,7 @@ data class ExportSettings(
     val bitrateMbps: Int = 20
 )
 
-class ExportViewModel : ViewModel() {
+class ExportViewModel(application: Application) : AndroidViewModel(application) {
 
     var project by mutableStateOf<Project?>(null)
         private set
@@ -38,6 +41,12 @@ class ExportViewModel : ViewModel() {
         private set
 
     var isComplete by mutableStateOf(false)
+        private set
+
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
+    var outputPath by mutableStateOf<String?>(null)
         private set
 
     fun loadProject(projectId: String) {
@@ -57,20 +66,38 @@ class ExportViewModel : ViewModel() {
     }
 
     fun startExport() {
+        val p = project ?: return
         isExporting = true
         progress = 0f
         isComplete = false
-    }
+        errorMessage = null
+        outputPath = null
 
-    fun updateProgress(value: Float) {
-        progress = value.coerceIn(0f, 1f)
-        if (progress >= 1f) {
-            isExporting = false
-            isComplete = true
+        val intent = android.content.Intent(
+            getApplication(),
+            id.my.daniza.reelcraft.export.ExportService::class.java
+        ).apply {
+            putExtra(id.my.daniza.reelcraft.export.ExportService.EXTRA_PROJECT_ID, p.id)
+            putExtra(id.my.daniza.reelcraft.export.ExportService.EXTRA_RESOLUTION, settings.resolution.ordinal)
+            putExtra(id.my.daniza.reelcraft.export.ExportService.EXTRA_FRAME_RATE, settings.frameRate)
+            putExtra(id.my.daniza.reelcraft.export.ExportService.EXTRA_BITRATE, settings.bitrateMbps)
+        }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            getApplication<android.app.Application>().startForegroundService(intent)
+        } else {
+            getApplication<android.app.Application>().startService(intent)
         }
     }
 
+    private fun updateProgress(value: Float) {
+        progress = value.coerceIn(0f, 1f)
+    }
+
     fun cancelExport() {
+        getApplication<android.app.Application>().let { app ->
+            val intent = android.content.Intent(app, id.my.daniza.reelcraft.export.ExportService::class.java)
+            app.stopService(intent)
+        }
         isExporting = false
         progress = 0f
     }
@@ -79,5 +106,7 @@ class ExportViewModel : ViewModel() {
         isExporting = false
         progress = 0f
         isComplete = false
+        errorMessage = null
+        outputPath = null
     }
 }

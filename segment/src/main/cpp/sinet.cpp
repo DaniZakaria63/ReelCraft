@@ -86,12 +86,13 @@ static void bilinear_upscale_mask(
     }
 }
 
-SINetModel* sinet_create(const uint8_t* model_data, size_t model_size, ModelType type) {
+SINetModel* sinet_create(const uint8_t* model_data, size_t model_size, ModelType type,
+                         int delegate_flags) {
     if (!model_data || model_size == 0) return nullptr;
     auto* sm = new SINetModel();
     sm->type = type;
 
-    sm->backend = tflite_create(model_data, model_size);
+    sm->backend = tflite_create(model_data, model_size, delegate_flags);
     if (!sm->backend) {
         sinet_destroy(sm);
         return nullptr;

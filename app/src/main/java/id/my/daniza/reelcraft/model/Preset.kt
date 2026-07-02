@@ -17,16 +17,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.ui.graphics.vector.ImageVector
 
-data class Preset(
-    val id: String,
-    val name: String,
-    val description: String,
-    val category: PresetCategory,
-    val icon: ImageVector,
-    val tier: Int,
-    val filterDesc: String = ""
-)
-
 enum class PresetCategory(val label: String) {
     ColorGrade("Color Grade"),
     Film("Film & Vintage"),
@@ -37,6 +27,16 @@ enum class PresetCategory(val label: String) {
     Aesthetic("Aesthetic"),
     Filters("Filters")
 }
+
+data class Preset(
+    val id: String,
+    val name: String,
+    val description: String,
+    val category: PresetCategory,
+    val icon: ImageVector,
+    val tier: Int,
+    val filterDesc: String = ""
+)
 
 object Presets {
     val all: List<Preset> = listOf(

@@ -1,21 +1,32 @@
 package id.my.daniza.reelcraft.viewmodel
 
-import android.app.Application
-import android.os.Handler
-import android.os.Looper
+import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import id.my.daniza.ffmpeg.NativeFFmpeg
 import id.my.daniza.reelcraft.data.DummyProjects
 import id.my.daniza.reelcraft.engine.PresetEngine
+import id.my.daniza.reelcraft.model.AppliedEffect
+import id.my.daniza.reelcraft.model.Clip
+import id.my.daniza.reelcraft.model.MaskType
+import id.my.daniza.reelcraft.model.MusicTrack
+import id.my.daniza.reelcraft.model.Presets
 import id.my.daniza.reelcraft.model.Project
 import id.my.daniza.reelcraft.model.TextOverlay
+import id.my.daniza.reelcraft.model.TimelineState
 import id.my.daniza.reelcraft.model.Transition
+import id.my.daniza.reelcraft.model.TransitionType
 import id.my.daniza.segment.SegmentEngine
 import java.util.UUID
 import kotlin.collections.plus
 import kotlin.random.Random
+import javax.inject.Inject
 
 private const val MAX_UNDO = 50
 
@@ -32,14 +43,17 @@ sealed class BottomSheetContent {
     data class Transitions(val clipId: String) : BottomSheetContent()
 }
 
-class EditorViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class EditorViewModel @Inject constructor(
+    val segmentEngine: SegmentEngine
+) : ViewModel() {
 
-    val segmentEngine: SegmentEngine = SegmentEngine(application)
+    val segmentReady: Boolean get() = segmentEngine.segmentReady
 
     var project by mutableStateOf<Project?>(null)
         private set
 
-    var timelineState by mutableStateOf()
+    var timelineState by mutableStateOf(TimelineState())
         private set
 
     var currentTool by mutableStateOf(EditorTool.SELECT)
@@ -49,9 +63,6 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
         private set
 
     var isBottomSheetExpanded by mutableStateOf(false)
-        private set
-
-    var segmentReady by mutableStateOf(false)
         private set
 
     var ffmpegReady by mutableStateOf(false)
@@ -66,21 +77,75 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
     var canRedo by mutableStateOf(false)
         private set
 
+    var previewBitmap by mutableStateOf<ImageBitmap?>(null)
+        private set
+
+    private var decoderHandle: Long = 0
+    private var frameWidth = 0
+    private var frameHeight = 0
+    private var frameBuffer: java.nio.ByteBuffer? = null
+
     private var nextClipNumber = 100
 
     private val undoStack = mutableListOf<Project>()
     private val redoStack = mutableListOf<Project>()
 
     init {
-        loadEngines()
+        verifyFFmpeg()
     }
 
-    private fun loadEngines() {
-        // FFmpeg — synchronous, throws on failure
+    // ─── Decoder / Preview ────────────────────────────────────────────────
+
+    fun openDecoderForPath(path: String): Boolean {
+        closeDecoder()
+        val handle = NativeFFmpeg.decoderOpen(path)
+        if (handle == 0L) return false
+        decoderHandle = handle
+        frameWidth = NativeFFmpeg.decoderWidth(handle)
+        frameHeight = NativeFFmpeg.decoderHeight(handle)
+        val size = NativeFFmpeg.decoderFrameSize(handle)
+        if (size > 0) {
+            frameBuffer = java.nio.ByteBuffer.allocateDirect(size)
+        }
+        return true
+    }
+
+    fun closeDecoder() {
+        if (decoderHandle != 0L) {
+            NativeFFmpeg.decoderClose(decoderHandle)
+            decoderHandle = 0
+        }
+        frameBuffer = null
+    }
+
+    fun decodeFrameAt(positionUs: Long): Bitmap? {
+        val handle = decoderHandle
+        val buf = frameBuffer ?: return null
+        if (handle == 0L) return null
+        if (frameWidth <= 0 || frameHeight <= 0) return null
+
+        NativeFFmpeg.decoderSeek(handle, positionUs)
+        buf.rewind()
+        if (!NativeFFmpeg.decoderReadFrame(handle, buf)) return null
+        buf.rewind()
+
+        val bitmap = Bitmap.createBitmap(frameWidth, frameHeight, Bitmap.Config.ARGB_8888)
+        bitmap.copyPixelsFromBuffer(buf)
+        return bitmap
+    }
+
+    fun updatePreviewAt(positionUs: Long) {
+        val bitmap = decodeFrameAt(positionUs)
+        previewBitmap = bitmap?.asImageBitmap()
+    }
+
+    // ─── Undo / Redo ──────────────────────────────────────────────────────
+
+    private fun verifyFFmpeg() {
         try {
             val ffOk = NativeFFmpeg.verifyFFmpeg()
             ffmpegReady = ffOk
-            Log.i("EditorViewModel", "FFmpeg verified: $ffOk")
+            Log.i("EditorViewModel", "FFmpeg verified: $ffOk, segment=$segmentReady")
             if (!ffOk) initError = "FFmpeg library loaded but filter graph test failed"
         } catch (e: UnsatisfiedLinkError) {
             ffmpegReady = false
@@ -93,31 +158,11 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
             Log.e("EditorViewModel", msg, e)
             initError = msg
         }
-
-        // Segment — load models on background thread to avoid blocking UI
-        val mainHandler = Handler(Looper.getMainLooper())
-        Thread {
-            try {
-                val loaded = segmentEngine.loadAll()
-                mainHandler.post {
-                    segmentReady = loaded
-                    Log.i("EditorViewModel", "Segment models loaded: $loaded (sinet=${segmentEngine.isLoaded}, mediapipe=${segmentEngine.isMediapipeLoaded})")
-                    if (!loaded && initError == null) initError = "Failed to load segmentation models"
-                }
-            } catch (e: Exception) {
-                mainHandler.post {
-                    segmentReady = false
-                    val msg = "Segment model loading failed: ${e.message}"
-                    Log.e("EditorViewModel", msg, e)
-                    initError = msg
-                }
-            }
-        }.apply { name = "segment-loader"; start() }
     }
 
     override fun onCleared() {
+        closeDecoder()
         super.onCleared()
-        segmentEngine.closeAll()
     }
 
     private fun saveState() {
@@ -151,16 +196,23 @@ class EditorViewModel(application: Application) : AndroidViewModel(application) 
         val found = DummyProjects.projectById(projectId)
         if (found != null) {
             project = found
+            val firstClip = found.clips.firstOrNull()
+            if (firstClip != null && firstClip.sourcePath.startsWith("/")) {
+                val ok = openDecoderForPath(firstClip.sourcePath)
+                Log.i("EditorViewModel", "Decoder opened for ${firstClip.sourcePath}: $ok")
+            }
             timelineState = timelineState.copy(
                 durationUs = found.effectiveDurationUs,
                 currentPositionUs = 0L
             )
+            updatePreviewAt(0L)
         }
     }
 
     fun seekTo(positionUs: Long) {
         val clamped = positionUs.coerceIn(0L, maxOf(timelineState.durationUs, 1L))
         timelineState = timelineState.copy(currentPositionUs = clamped)
+        updatePreviewAt(clamped)
     }
 
     fun togglePlayback() {

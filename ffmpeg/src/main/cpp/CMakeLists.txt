@@ -37,7 +37,8 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         encoder.cpp
         filter_graph.cpp
         compositor.cpp
-        temporal.cpp)
+        temporal.cpp
+        feather.cpp)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ../../../../ffmpeg/src/main/cpp/ffmpeg/include)

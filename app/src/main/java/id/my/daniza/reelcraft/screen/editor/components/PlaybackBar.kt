@@ -1,4 +1,4 @@
-package id.my.daniza.reelcraft.ui.editor.components
+package id.my.daniza.reelcraft.screen.editor.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
