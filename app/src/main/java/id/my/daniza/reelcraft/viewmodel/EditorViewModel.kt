@@ -8,9 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import id.my.daniza.ffmpeg.NativeFFmpeg
-import id.my.daniza.reelcraft.data.DummyProjects
+import id.my.daniza.reelcraft.data.repository.ProjectRepository
 import id.my.daniza.reelcraft.engine.PresetEngine
 import id.my.daniza.reelcraft.model.AppliedEffect
 import id.my.daniza.reelcraft.model.Clip
@@ -26,6 +27,7 @@ import id.my.daniza.segment.SegmentEngine
 import java.util.UUID
 import kotlin.collections.plus
 import kotlin.random.Random
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val MAX_UNDO = 50
@@ -45,7 +47,8 @@ sealed class BottomSheetContent {
 
 @HiltViewModel
 class EditorViewModel @Inject constructor(
-    val segmentEngine: SegmentEngine
+    val segmentEngine: SegmentEngine,
+    private val projectRepository: ProjectRepository
 ) : ViewModel() {
 
     val segmentReady: Boolean get() = segmentEngine.segmentReady
@@ -193,19 +196,22 @@ class EditorViewModel @Inject constructor(
     }
 
     fun loadProject(projectId: String) {
-        val found = DummyProjects.projectById(projectId)
-        if (found != null) {
-            project = found
-            val firstClip = found.clips.firstOrNull()
-            if (firstClip != null && firstClip.sourcePath.startsWith("/")) {
-                val ok = openDecoderForPath(firstClip.sourcePath)
-                Log.i("EditorViewModel", "Decoder opened for ${firstClip.sourcePath}: $ok")
+        viewModelScope.launch {
+            val result = projectRepository.loadFullProject(projectId)
+            if (result != null) {
+                project = result.project
+                result.timelineState?.let { timelineState = it }
+                val firstClip = result.project.clips.firstOrNull()
+                if (firstClip != null && firstClip.sourcePath.startsWith("/")) {
+                    val ok = openDecoderForPath(firstClip.sourcePath)
+                    Log.i("EditorViewModel", "Decoder opened for ${firstClip.sourcePath}: $ok")
+                }
+                timelineState = timelineState.copy(
+                    durationUs = result.project.effectiveDurationUs,
+                    currentPositionUs = timelineState.currentPositionUs
+                )
+                updatePreviewAt(timelineState.currentPositionUs)
             }
-            timelineState = timelineState.copy(
-                durationUs = found.effectiveDurationUs,
-                currentPositionUs = 0L
-            )
-            updatePreviewAt(0L)
         }
     }
 
@@ -444,6 +450,12 @@ class EditorViewModel @Inject constructor(
     private fun syncDuration() {
         val effective = project?.effectiveDurationUs ?: return
         timelineState = timelineState.copy(durationUs = effective)
+    }
+
+    fun saveProject() {
+        viewModelScope.launch {
+            project?.let { projectRepository.saveFullProject(it, timelineState) }
+        }
     }
 
     // ─── Bottom sheet navigation ────────────────────────────────────────

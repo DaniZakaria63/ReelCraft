@@ -42,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,15 +54,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import id.my.daniza.reelcraft.model.Project
+import androidx.hilt.navigation.compose.hiltViewModel
+import id.my.daniza.local.db.entity.ProjectEntity
 import id.my.daniza.reelcraft.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onOpenProject: (String) -> Unit,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
@@ -97,7 +98,7 @@ fun HomeScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        val projects = viewModel.projects
+        val projects by viewModel.projects.collectAsState()
         if (projects.isEmpty()) {
             EmptyState(modifier = Modifier.padding(padding))
         } else {
@@ -153,7 +154,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ProjectCard(
-    project: Project,
+    project: ProjectEntity,
     onClick: () -> Unit,
     onDelete: () -> Unit,
     onDuplicate: () -> Unit
