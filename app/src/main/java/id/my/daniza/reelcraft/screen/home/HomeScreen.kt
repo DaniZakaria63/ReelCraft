@@ -54,7 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import id.my.daniza.local.db.entity.ProjectEntity
 import id.my.daniza.reelcraft.viewmodel.HomeViewModel
 
@@ -62,7 +62,7 @@ import id.my.daniza.reelcraft.viewmodel.HomeViewModel
 @Composable
 fun HomeScreen(
     onOpenProject: (String) -> Unit,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
