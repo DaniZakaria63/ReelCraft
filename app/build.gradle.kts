@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -47,6 +48,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":local"))
     implementation(project(":ffmpeg"))
     implementation(project(":segment"))
     implementation(libs.androidx.appcompat)
@@ -58,6 +60,9 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+
+    // Kotlinx Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     // Background model download
     implementation(libs.androidx.work.runtime.ktx)
