@@ -165,13 +165,11 @@ class ProjectJsonSerializerTest {
         assertEquals(500_000L, deserializedText.startOffsetUs)
         assertEquals(2_000_000L, deserializedText.endOffsetUs)
 
-        val deserializedTransition = deserializedClip.transitionOut
-        assertNotNull(deserializedTransition)
+        val deserializedTransition = requireNotNull(deserializedClip.transitionOut)
         assertEquals(TransitionType.Crossfade, deserializedTransition.type)
         assertEquals(500_000L, deserializedTransition.durationUs)
 
-        val deserializedMusic = deserialized.musicTrack
-        assertNotNull(deserializedMusic)
+        val deserializedMusic = requireNotNull(deserialized.musicTrack)
         assertEquals("/tmp/music.mp3", deserializedMusic.sourcePath)
         assertEquals("Upbeat", deserializedMusic.name)
         assertEquals(0.4f, deserializedMusic.volume)
