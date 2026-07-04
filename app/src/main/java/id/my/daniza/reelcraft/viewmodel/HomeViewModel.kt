@@ -1,6 +1,8 @@
 package id.my.daniza.reelcraft.viewmodel
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,10 +12,12 @@ import id.my.daniza.reelcraft.data.repository.ProjectRepository
 import id.my.daniza.reelcraft.model.AspectRatio
 import id.my.daniza.reelcraft.model.Clip
 import id.my.daniza.reelcraft.model.Project
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
@@ -40,10 +44,15 @@ class HomeViewModel @Inject constructor(
                     }
                 }
 
+                val thumbnailPath = withContext(Dispatchers.IO) {
+                    extractThumbnail(tempFile.absolutePath, context)
+                }
+
                 val projectId = UUID.randomUUID().toString()
                 val fullProject = Project(
                     id = projectId,
                     name = "Imported Video",
+                    thumbnailPath = thumbnailPath,
                     clips = listOf(
                         Clip(
                             id = "clip_${projectId.takeLast(8)}",
@@ -61,12 +70,32 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun createProject(name: String) {
-        viewModelScope.launch {
-            repository.createProject(
-                name = name.ifBlank { "Untitled Project" },
-                aspectRatio = AspectRatio.SixteenNine
-            )
+    private fun extractThumbnail(videoPath: String, context: Context): String? {
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(videoPath)
+            val bitmap = retriever.frameAtTime
+                ?: retriever.embeddedPicture?.let { decodeByteArray(it) }
+                ?: return null
+            val thumbDir = File(context.cacheDir, "thumbnails")
+            thumbDir.mkdirs()
+            val thumbFile = File(thumbDir, "thumb_${System.currentTimeMillis()}.jpg")
+            FileOutputStream(thumbFile).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+            }
+            thumbFile.absolutePath
+        } catch (_: Exception) {
+            null
+        } finally {
+            retriever.release()
+        }
+    }
+
+    private fun decodeByteArray(data: ByteArray): Bitmap? {
+        return try {
+            android.graphics.BitmapFactory.decodeByteArray(data, 0, data.size)
+        } catch (_: Exception) {
+            null
         }
     }
 

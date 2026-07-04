@@ -23,6 +23,7 @@ class ProjectRepository @Inject constructor(
     fun observeProjects(): Flow<List<ProjectEntity>> =
         projectDao.getAllProjects()
 
+    // only used by ProjectRepositoryTest
     suspend fun createProject(name: String, aspectRatio: AspectRatio): String {
         val projectId = UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
@@ -38,7 +39,7 @@ class ProjectRepository @Inject constructor(
         jsonManager.saveProject(project, null, jsonSerializer)
 
         val entity = projectToEntity(project, jsonPath, now)
-        projectDao.upsertProject(entity)
+        projectDao.insertOrUpdate(entity)
         return projectId
     }
 
@@ -71,31 +72,7 @@ class ProjectRepository @Inject constructor(
         jsonManager.saveProject(saved, timelineState, jsonSerializer)
 
         val entity = projectToEntity(saved, jsonPath, now)
-        projectDao.upsertProject(entity)
-    }
-
-    suspend fun exportProjectJson(projectId: String): File? {
-        val entity = projectDao.getProjectById(projectId) ?: return null
-        val source = File(entity.projectJsonPath)
-        if (!source.exists()) return null
-        val exportDir = File(jsonManager.projectsDir.parentFile, "exports").also { it.mkdirs() }
-        val dest = File(exportDir, source.name)
-        source.copyTo(dest, overwrite = true)
-        return dest
-    }
-
-    suspend fun importProjectFromJson(jsonFile: File): String {
-        val project = jsonSerializer.deserialize(jsonFile.readText()).project
-        val now = System.currentTimeMillis()
-        val imported = project.copy(
-            id = UUID.randomUUID().toString(),
-            dateCreatedMs = now,
-            dateModifiedMs = now
-        )
-        val jsonPath = jsonManager.saveProject(imported, null, jsonSerializer)
-        val entity = projectToEntity(imported, jsonPath, now)
-        projectDao.upsertProject(entity)
-        return imported.id
+        projectDao.insertOrUpdate(entity)
     }
 
     data class LoadResult(

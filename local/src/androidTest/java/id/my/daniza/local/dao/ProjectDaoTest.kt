@@ -47,7 +47,7 @@ class ProjectDaoTest {
             dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project1.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
 
         val retrieved = dao.getProjectById("project1")
         assertNotNull(retrieved)
@@ -64,10 +64,10 @@ class ProjectDaoTest {
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project2.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
 
         val updated = entity.copy(name = "Updated", dateModifiedMs = 3000L)
-        dao.upsertProject(updated)
+        dao.insertOrUpdate(updated)
 
         val retrieved = dao.getProjectById("project2")
         assertEquals("Updated", retrieved!!.name)
@@ -82,7 +82,7 @@ class ProjectDaoTest {
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project3.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
         dao.deleteProjectById("project3")
 
         assertNull(dao.getProjectById("project3"))
@@ -102,8 +102,8 @@ class ProjectDaoTest {
             dateCreatedMs = 2000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/newer.json"
         )
-        dao.upsertProject(older)
-        dao.upsertProject(newer)
+        dao.insertOrUpdate(older)
+        dao.insertOrUpdate(newer)
 
         val projects = dao.getAllProjects().first()
         assertEquals(2, projects.size)
@@ -119,7 +119,7 @@ class ProjectDaoTest {
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project5.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
         dao.renameProject("project5", "Renamed", 3000L)
 
         val retrieved = dao.getProjectById("project5")
@@ -135,7 +135,7 @@ class ProjectDaoTest {
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project6.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
         dao.touchModifiedDate("project6", 9999L)
 
         val retrieved = dao.getProjectById("project6")
@@ -150,7 +150,7 @@ class ProjectDaoTest {
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project7.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
         dao.updateThumbnailPath("project7", "/cache/thumb.png", 3000L)
 
         val retrieved = dao.getProjectById("project7")
@@ -165,7 +165,7 @@ class ProjectDaoTest {
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project8.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
         dao.updateCatalogFields("project8", 5_000_000L, "OneOne", 3000L)
 
         val retrieved = dao.getProjectById("project8")
@@ -182,7 +182,7 @@ class ProjectDaoTest {
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
             projectJsonPath = "/data/projects/project9.json"
         )
-        dao.upsertProject(entity)
+        dao.insertOrUpdate(entity)
         val inserted = dao.getProjectById("project9")
         assertNotNull(inserted)
 
