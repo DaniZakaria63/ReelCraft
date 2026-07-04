@@ -7,7 +7,7 @@
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_id_my_daniza_segment_NativeSegment_nativeLoadModel(
-    JNIEnv* env, jclass, jobject model_buffer, jint model_type, jint delegate_flags)
+    JNIEnv* env, jclass, jobject model_buffer, jint model_type, jint delegate_flags, jint num_threads)
 {
     if (!model_buffer) return 0;
     void* data = env->GetDirectBufferAddress(model_buffer);
@@ -16,7 +16,7 @@ Java_id_my_daniza_segment_NativeSegment_nativeLoadModel(
     if (capacity <= 0) return 0;
 
     ModelType type = (model_type == 1) ? ModelType::MediaPipeSelfie : ModelType::SINet;
-    SINetModel* sm = sinet_create((const uint8_t*)data, (size_t)capacity, type, delegate_flags);
+    SINetModel* sm = sinet_create((const uint8_t*)data, (size_t)capacity, type, delegate_flags, (int)num_threads);
     return reinterpret_cast<jlong>(sm);
 }
 

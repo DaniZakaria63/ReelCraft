@@ -4,17 +4,25 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
-import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
 import id.my.daniza.segment.SegmentEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 @HiltAndroidApp
 class ReelCraftApplication : Application() {
 
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onCreate() {
         super.onCreate()
-        Log.i("ReelCraftApp", "Initializing SegmentEngine on app start")
         SegmentEngine.init(this)
+        appScope.launch {
+            SegmentEngine.getInstance().preloadSinet()
+        }
         createExportChannel()
     }
 
@@ -38,7 +46,7 @@ class ReelCraftApplication : Application() {
     }
 
     override fun onTerminate() {
-        Log.i("ReelCraftApp", "Cleaning up SegmentEngine")
+        appScope.cancel()
         SegmentEngine.close()
         super.onTerminate()
     }

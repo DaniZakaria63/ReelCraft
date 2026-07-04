@@ -9,7 +9,7 @@ constexpr int TFLITE_DELEGATE_NNAPI   = 1 << 1;
 struct TFLiteBackend;
 
 TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size,
-                              int delegate_flags = 0);
+                              int delegate_flags = 0, int num_threads = 0);
 void tflite_destroy(TFLiteBackend* tb);
 
 int tflite_input_count(TFLiteBackend* tb);

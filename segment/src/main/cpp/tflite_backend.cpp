@@ -1,6 +1,8 @@
 #include "tflite_backend.h"
 
+#include <algorithm>
 #include <cstring>
+#include <thread>
 
 #include "tflite/core/c/c_api.h"
 #include "tflite/delegates/xnnpack/xnnpack_delegate.h"
@@ -18,7 +20,7 @@ struct TFLiteBackend {
 };
 
 TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size,
-                              int delegate_flags) {
+                              int delegate_flags, int num_threads) {
     if (!model_data || model_size == 0) return nullptr;
     auto* tb = new TFLiteBackend();
 
@@ -28,7 +30,12 @@ TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size,
     tb->options = TfLiteInterpreterOptionsCreate();
     if (!tb->options) { tflite_destroy(tb); return nullptr; }
 
-    TfLiteInterpreterOptionsSetNumThreads(tb->options, 2);
+    if (num_threads <= 0) {
+        int cores = std::max(1, (int)std::thread::hardware_concurrency());
+        num_threads = std::max(2, cores / 2);
+    }
+
+    TfLiteInterpreterOptionsSetNumThreads(tb->options, num_threads);
 
     if (delegate_flags & TFLITE_DELEGATE_NNAPI) {
         TfLiteInterpreterOptionsSetUseNNAPI(tb->options, true);
@@ -36,7 +43,7 @@ TFLiteBackend* tflite_create(const uint8_t* model_data, size_t model_size,
 
     if (delegate_flags & TFLITE_DELEGATE_XNNPACK) {
         TfLiteXNNPackDelegateOptions opts = TfLiteXNNPackDelegateOptionsDefault();
-        opts.num_threads = 2;
+        opts.num_threads = num_threads;
         tb->xnnpack_delegate = TfLiteXNNPackDelegateCreate(&opts);
         if (tb->xnnpack_delegate) {
             TfLiteInterpreterOptionsAddDelegate(tb->options, tb->xnnpack_delegate);

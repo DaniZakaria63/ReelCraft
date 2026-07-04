@@ -15,8 +15,11 @@ object NativeSegment {
     const val DELEGATE_XNNPACK = 1 shl 0
     const val DELEGATE_NNAPI   = 1 shl 1
 
-    fun loadModel(modelBuffer: ByteBuffer, modelType: Int, delegateFlags: Int = 0): Long {
-        return nativeLoadModel(modelBuffer, modelType, delegateFlags)
+    fun getOptimalThreadCount(): Int =
+        maxOf(2, Runtime.getRuntime().availableProcessors() / 2)
+
+    fun loadModel(modelBuffer: ByteBuffer, modelType: Int, delegateFlags: Int = 0, numThreads: Int = 0): Long {
+        return nativeLoadModel(modelBuffer, modelType, delegateFlags, numThreads)
     }
 
     fun closeModel(handle: Long) {
@@ -48,7 +51,7 @@ object NativeSegment {
         return nativeApplyEffect(paramsBuffer, rgbaBuffer, width, height, maskBuffer, outBuffer)
     }
 
-    private external fun nativeLoadModel(modelBuffer: ByteBuffer, modelType: Int, delegateFlags: Int): Long
+    private external fun nativeLoadModel(modelBuffer: ByteBuffer, modelType: Int, delegateFlags: Int, numThreads: Int): Long
     private external fun nativeCloseModel(handle: Long)
     private external fun nativeSegmentFrame(
         handle: Long,
