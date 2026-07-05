@@ -2,3 +2,6 @@
 /.cxx
 /prebuilts
 /tflite_include
+
+# test images
+/src/androidTest/assets/test_frames/
