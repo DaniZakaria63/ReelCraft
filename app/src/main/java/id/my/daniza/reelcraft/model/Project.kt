@@ -7,6 +7,7 @@ data class Project(
     val durationUs: Long = 0L,
     val dateCreatedMs: Long = System.currentTimeMillis(),
     val dateModifiedMs: Long = System.currentTimeMillis(),
+    val lastOpenedMs: Long = System.currentTimeMillis(),
     val clips: List<Clip> = emptyList(),
     val musicTrack: MusicTrack? = null,
     val aspectRatio: AspectRatio = AspectRatio.SixteenNine,

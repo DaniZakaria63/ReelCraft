@@ -18,7 +18,7 @@ interface ProjectDao {
     suspend fun getProjectById(projectId: String): ProjectEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertProject(project: ProjectEntity)
+    suspend fun insertOrUpdate(project: ProjectEntity)
 
     @Delete
     suspend fun deleteProject(project: ProjectEntity)
@@ -37,4 +37,7 @@ interface ProjectDao {
 
     @Query("UPDATE projects SET duration_us = :durationUs, aspect_ratio = :aspectRatio, date_modified_ms = :now WHERE id = :projectId")
     suspend fun updateCatalogFields(projectId: String, durationUs: Long, aspectRatio: String, now: Long)
+
+    @Query("UPDATE projects SET last_opened_ms = :timestamp WHERE id = :projectId")
+    suspend fun touchLastOpened(projectId: String, timestamp: Long)
 }

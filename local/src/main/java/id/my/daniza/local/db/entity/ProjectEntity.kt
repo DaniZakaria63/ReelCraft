@@ -18,5 +18,7 @@ data class ProjectEntity(
     val dateCreatedMs: Long,
     @ColumnInfo(name = "date_modified_ms")
     val dateModifiedMs: Long,
+    @ColumnInfo(name = "last_opened_ms")
+    val lastOpenedMs: Long,
     val projectJsonPath: String
 )
