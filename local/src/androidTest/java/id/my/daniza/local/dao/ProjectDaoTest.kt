@@ -45,6 +45,7 @@ class ProjectDaoTest {
             aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L,
             dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project1.json"
         )
         dao.insertOrUpdate(entity)
@@ -62,6 +63,7 @@ class ProjectDaoTest {
             id = "project2", name = "Original",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project2.json"
         )
         dao.insertOrUpdate(entity)
@@ -80,6 +82,7 @@ class ProjectDaoTest {
             id = "project3", name = "To Delete",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "FourThree",
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project3.json"
         )
         dao.insertOrUpdate(entity)
@@ -94,12 +97,14 @@ class ProjectDaoTest {
             id = "older", name = "Older",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L, dateModifiedMs = 1000L,
+            lastOpenedMs = 1000L,
             projectJsonPath = "/data/projects/older.json"
         )
         val newer = ProjectEntity(
             id = "newer", name = "Newer",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 2000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/newer.json"
         )
         dao.insertOrUpdate(older)
@@ -117,6 +122,7 @@ class ProjectDaoTest {
             id = "project5", name = "Original Name",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project5.json"
         )
         dao.insertOrUpdate(entity)
@@ -133,6 +139,7 @@ class ProjectDaoTest {
             id = "project6", name = "Touch",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project6.json"
         )
         dao.insertOrUpdate(entity)
@@ -148,6 +155,7 @@ class ProjectDaoTest {
             id = "project7", name = "Thumb",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project7.json"
         )
         dao.insertOrUpdate(entity)
@@ -163,6 +171,7 @@ class ProjectDaoTest {
             id = "project8", name = "Catalog",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project8.json"
         )
         dao.insertOrUpdate(entity)
@@ -180,6 +189,7 @@ class ProjectDaoTest {
             id = "project9", name = "Entity Delete",
             thumbnailPath = null, durationUs = 0L, aspectRatio = "SixteenNine",
             dateCreatedMs = 1000L, dateModifiedMs = 2000L,
+            lastOpenedMs = 2000L,
             projectJsonPath = "/data/projects/project9.json"
         )
         dao.insertOrUpdate(entity)

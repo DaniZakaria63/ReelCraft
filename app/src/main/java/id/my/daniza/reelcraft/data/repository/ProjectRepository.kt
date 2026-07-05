@@ -60,15 +60,17 @@ class ProjectRepository @Inject constructor(
 
     suspend fun loadFullProject(projectId: String): LoadResult? {
         val entity = projectDao.getProjectById(projectId) ?: return null
+        val now = System.currentTimeMillis()
+        projectDao.touchLastOpened(projectId, now)
         val result = jsonManager.loadProjectWithTimeline(entity.projectJsonPath, jsonSerializer) ?: return null
-        return LoadResult(result.project, result.timelineState)
+        return LoadResult(result.project.copy(lastOpenedMs = now), result.timelineState)
     }
 
     suspend fun saveFullProject(project: Project, timelineState: TimelineState? = null) {
         val now = System.currentTimeMillis()
         val jsonPath = jsonManager.projectFilePath(project.id)
 
-        val saved = project.copy(dateModifiedMs = now)
+        val saved = project.copy(dateModifiedMs = now, lastOpenedMs = now)
         jsonManager.saveProject(saved, timelineState, jsonSerializer)
 
         val entity = projectToEntity(saved, jsonPath, now)
@@ -80,6 +82,12 @@ class ProjectRepository @Inject constructor(
         val timelineState: TimelineState?
     )
 
+    suspend fun getProjectEntity(projectId: String): ProjectEntity? =
+        projectDao.getProjectById(projectId)
+
+    fun projectJsonFile(projectId: String): File =
+        File(jsonManager.projectFilePath(projectId))
+
     private fun projectToEntity(project: Project, jsonPath: String, now: Long) = ProjectEntity(
         id = project.id,
         name = project.name,
@@ -88,6 +96,7 @@ class ProjectRepository @Inject constructor(
         aspectRatio = project.aspectRatio.name,
         dateCreatedMs = project.dateCreatedMs,
         dateModifiedMs = now,
+        lastOpenedMs = project.lastOpenedMs,
         projectJsonPath = jsonPath
     )
 }
