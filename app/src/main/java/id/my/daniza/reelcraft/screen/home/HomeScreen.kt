@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -25,9 +26,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -39,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -60,6 +66,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import id.my.daniza.local.db.entity.ProjectEntity
 import id.my.daniza.reelcraft.viewmodel.HomeViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,12 +124,24 @@ fun HomeScreen(
                 items(projects, key = { it.id }) { project ->
                     ProjectCard(
                         project = project,
-                        onClick = { onOpenProject(project.id) },
+                        onClick = { viewModel.openProject(project.id, onOpenProject) },
                         onDelete = { viewModel.deleteProject(project.id) },
                         onDuplicate = { viewModel.duplicateProject(project.id) }
                     )
                 }
             }
+        }
+
+        val error = viewModel.validationError
+        if (error is HomeViewModel.ValidationError.Broken) {
+            BrokenProjectDialog(
+                error = error,
+                onDismiss = { viewModel.clearValidationError() },
+                onDelete = {
+                    viewModel.deleteProject(error.projectId)
+                    viewModel.clearValidationError()
+                }
+            )
         }
     }
 }
@@ -216,6 +237,13 @@ private fun ProjectCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        text = "Opened ${formatRelativeTime(project.lastOpenedMs)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Box {
@@ -257,9 +285,100 @@ private fun ProjectCard(
     }
 }
 
+@Composable
+private fun BrokenProjectDialog(
+    error: HomeViewModel.ValidationError.Broken,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Default.ErrorOutline,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error
+            )
+        },
+        title = {
+            Text("Broken Project")
+        },
+        text = {
+            Column {
+                Text(
+                    "\"${error.projectName}\" cannot be opened:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(8.dp))
+                error.reasons.forEach { reason ->
+                    Row(
+                        modifier = Modifier.padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.ErrorOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            reason,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDelete,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text("Delete Project")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
 private fun formatDuration(us: Long): String {
     val totalSeconds = us / 1_000_000
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "${minutes}m ${seconds}s"
+}
+
+private fun formatRelativeTime(timestampMs: Long): String {
+    if (timestampMs <= 0) return "Never"
+    val now = System.currentTimeMillis()
+    val diff = now - timestampMs
+    if (diff < 0) return "Just now"
+    val minutes = diff / 60_000
+    val hours = minutes / 60
+    val days = hours / 24
+    return when {
+        minutes < 1 -> "Just now"
+        minutes < 60 -> "${minutes}m ago"
+        hours < 24 -> "${hours}h ago"
+        days < 7 -> "${days}d ago"
+        else -> {
+            val dateFormat = SimpleDateFormat("MMM d", Locale.getDefault())
+            dateFormat.format(Date(timestampMs))
+        }
+    }
 }
