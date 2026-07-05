@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import id.my.daniza.local.dao.ProjectDao
 import id.my.daniza.local.db.AppDatabase
+import id.my.daniza.local.db.MIGRATION_1_2
 import id.my.daniza.reelcraft.data.json.ProjectJsonManager
 import id.my.daniza.reelcraft.data.json.ProjectJsonSerializer
 import id.my.daniza.reelcraft.data.repository.ProjectRepository
@@ -26,7 +27,8 @@ object LocalModule {
         context,
         AppDatabase::class.java,
         "reelcraft.db"
-    ).build()
+    ).addMigrations(MIGRATION_1_2)
+        .build()
 
     @Provides
     fun provideProjectDao(db: AppDatabase): ProjectDao = db.projectDao()
