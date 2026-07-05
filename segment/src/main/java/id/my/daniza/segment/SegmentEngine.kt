@@ -2,7 +2,7 @@ package id.my.daniza.segment
 
 import android.content.Context
 import android.util.Log
-import java.io.IOException
+import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -10,7 +10,6 @@ class SegmentEngine private constructor(private val appContext: Context) {
 
     companion object {
         private const val TAG = "SegmentEngine"
-        private const val EFFECT_PARAMS_SIZE = 64
 
         @Volatile
         private var instance: SegmentEngine? = null
@@ -34,104 +33,72 @@ class SegmentEngine private constructor(private val appContext: Context) {
         }
     }
 
-    @Volatile
-    var sinetHandle = 0L
-        private set
-
-    @Volatile
-    var mediapipeHandle = 0L
-        private set
-
-    @Volatile
-    private var sinetLoaded = false
-
-    @Volatile
-    private var mediapipeLoaded = false
+    val segmentReady: Boolean get() = NativeSegment.sinetReady
 
     private val loadLock = Any()
 
-    val segmentReady: Boolean get() = sinetHandle != 0L
-
     fun preloadSinet() {
-        ensureSinetLoaded()
+        synchronized(loadLock) {
+            if (NativeSegment.sinetReady) return
+            NativeSegment.loadSinet(appContext, "models/sinet.tflite")
+            if (NativeSegment.sinetReady) {
+                Log.i(TAG, "SINet model loaded")
+            } else {
+                Log.e(TAG, "Failed to load SINet model")
+            }
+        }
     }
 
     fun preloadMediapipe() {
-        ensureMediapipeLoaded()
-    }
-
-    private fun ensureSinetLoaded() {
-        if (sinetLoaded) return
         synchronized(loadLock) {
-            if (sinetLoaded) return
-            val delegateFlags = NativeSegment.DELEGATE_XNNPACK or NativeSegment.DELEGATE_NNAPI
-            loadModel(appContext, "models/sinet.tflite", NativeSegment.MODEL_SINET, delegateFlags) { sinetHandle = it }
-            sinetLoaded = true
-        }
-    }
-
-    private fun ensureMediapipeLoaded() {
-        if (mediapipeLoaded) return
-        synchronized(loadLock) {
-            if (mediapipeLoaded) return
-            val delegateFlags = NativeSegment.DELEGATE_XNNPACK or NativeSegment.DELEGATE_NNAPI
-            loadModel(appContext, "models/mediapipe_selfie.tflite", NativeSegment.MODEL_MEDIAPIPE_SELFIE, delegateFlags) { mediapipeHandle = it }
-            mediapipeLoaded = true
-        }
-    }
-
-    private fun loadModel(context: Context, path: String, type: Int, delegateFlags: Int, onSuccess: (Long) -> Unit) {
-        try {
-            val bytes = context.assets.open(path).use { it.readBytes() }
-            val buf = ByteBuffer.allocateDirect(bytes.size).apply {
-                order(ByteOrder.nativeOrder())
-                put(bytes)
-                rewind()
-            }
-            val threads = NativeSegment.getOptimalThreadCount()
-            val handle = NativeSegment.loadModel(buf, type, delegateFlags, threads)
-            if (handle != 0L) {
-                onSuccess(handle)
-                Log.i(TAG, "Loaded $path")
+            if (NativeSegment.mediapipeReady) return
+            NativeSegment.loadMediapipe(appContext, "models/mediapipe_selfie.tflite")
+            if (NativeSegment.mediapipeReady) {
+                Log.i(TAG, "MediaPipe model loaded")
             } else {
-                Log.e(TAG, "Failed to create model: $path")
+                Log.e(TAG, "Failed to load MediaPipe model")
             }
-        } catch (e: IOException) {
-            Log.w(TAG, "Asset not found: $path")
         }
     }
 
     fun segmentFrame(rgba: ByteBuffer, width: Int, height: Int, mask: ByteBuffer): Boolean {
-        ensureSinetLoaded()
-        return sinetHandle != 0L && NativeSegment.segmentFrame(sinetHandle, rgba, width, height, mask)
+        return NativeSegment.sinetReady &&
+            NativeSegment.segmentFrame(
+                NativeSegment.sinetInterpreter ?: return false,
+                rgba, width, height, mask, 0,
+            )
     }
 
     fun segmentFrameWithMediapipe(rgba: ByteBuffer, width: Int, height: Int, mask: ByteBuffer): Boolean {
-        ensureMediapipeLoaded()
-        val h = if (mediapipeHandle != 0L) mediapipeHandle else {
-            ensureSinetLoaded()
-            sinetHandle
-        }
-        return h != 0L && NativeSegment.segmentFrame(h, rgba, width, height, mask)
+        val interp = if (NativeSegment.mediapipeReady) NativeSegment.mediapipeInterpreter
+        else if (NativeSegment.sinetReady) NativeSegment.sinetInterpreter
+        else return false
+        return NativeSegment.segmentFrame(interp!!, rgba, width, height, mask, 1)
     }
 
     fun applyEffect(effectType: Int, rgba: ByteBuffer, width: Int, height: Int, mask: ByteBuffer, out: ByteBuffer): Boolean {
-        ensureSinetLoaded()
-        if (sinetHandle == 0L) return false
-        val paramsBuf = ByteBuffer.allocateDirect(EFFECT_PARAMS_SIZE).apply {
-            order(ByteOrder.nativeOrder())
-        }
-        NativeSegment.generateEffectParams(effectType, paramsBuf)
-        return NativeSegment.applyEffect(paramsBuf, rgba, width, height, mask, out)
+        val params = SegmentEffects.generateParams(effectType)
+        val rgbaArr = ByteArray(width * height * 4)
+        val maskArr = FloatArray(width * height)
+        val outArr = ByteArray(width * height * 4)
+
+        rgba.rewind()
+        rgba.get(rgbaArr)
+        mask.rewind()
+        for (i in maskArr.indices) maskArr[i] = mask.float
+
+        SegmentEffects.apply(params, rgbaArr, maskArr, outArr, width, height)
+
+        out.rewind()
+        out.put(outArr)
+        out.rewind()
+        return true
     }
 
     fun segmentAndApply(effectType: Int, rgba: ByteBuffer, width: Int, height: Int, out: ByteBuffer): Boolean {
-        ensureSinetLoaded()
-        if (sinetHandle == 0L) return false
-        val maskBuf = ByteBuffer.allocateDirect(width * height * 4).apply {
-            order(ByteOrder.nativeOrder())
-        }
-        if (!NativeSegment.segmentFrame(sinetHandle, rgba, width, height, maskBuf)) {
+        if (!NativeSegment.sinetReady) return false
+        val maskBuf = ByteBuffer.allocateDirect(width * height * 4).apply { order(ByteOrder.nativeOrder()) }
+        if (!segmentFrame(rgba, width, height, maskBuf)) {
             Log.w(TAG, "segmentFrame failed")
             return false
         }
@@ -140,15 +107,6 @@ class SegmentEngine private constructor(private val appContext: Context) {
     }
 
     private fun closeAll() {
-        if (sinetHandle != 0L) {
-            NativeSegment.closeModel(sinetHandle)
-            sinetHandle = 0L
-        }
-        if (mediapipeHandle != 0L) {
-            NativeSegment.closeModel(mediapipeHandle)
-            mediapipeHandle = 0L
-        }
-        sinetLoaded = false
-        mediapipeLoaded = false
+        NativeSegment.closeAll()
     }
 }

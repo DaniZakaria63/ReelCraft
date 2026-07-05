@@ -38,7 +38,7 @@ object ExportProcessor {
         val frameBytes2 = ByteBuffer.allocateDirect(frameSize).order(ByteOrder.nativeOrder())
         val maskBytes = ByteBuffer.allocateDirect(w * h * 4).order(ByteOrder.nativeOrder())
 
-        val segModel = SegmentEngine.getInstance().sinetHandle
+        val segEngine = SegmentEngine.getInstance()
 
         // Calculate total frames
         var totalFrames = 0L
@@ -114,24 +114,18 @@ object ExportProcessor {
                             val segEffect = clip.effects.firstOrNull {
                                 PresetEngine.isSegmentEffect(it.presetId)
                             }
-                            if (segEffect != null && segModel != 0L) {
+                            if (segEffect != null && segEngine.segmentReady) {
                                 frameBytes.rewind()
                                 maskBytes.clear()
-                                NativeSegment.segmentFrame(segModel, frameBytes, w, h, maskBytes)
+                                segEngine.segmentFrame(frameBytes, w, h, maskBytes)
 
                                 frameBytes.rewind()
                                 frameBytes2.clear()
                                 maskBytes.rewind()
 
-                                val paramsBuf = ByteBuffer.allocateDirect(64).order(ByteOrder.nativeOrder())
-                                NativeSegment.generateEffectParams(
+                                segEngine.applyEffect(
                                     PresetEngine.getSegmentEffectType(segEffect.presetId),
-                                    paramsBuf
-                                )
-                                paramsBuf.rewind()
-
-                                NativeSegment.applyEffect(
-                                    paramsBuf, frameBytes, w, h, maskBytes, frameBytes2
+                                    frameBytes, w, h, maskBytes, frameBytes2,
                                 )
                                 frameBytes2.rewind()
                                 frameBytes.rewind()
