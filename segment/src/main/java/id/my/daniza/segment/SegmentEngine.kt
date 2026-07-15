@@ -61,6 +61,11 @@ class SegmentEngine private constructor(private val appContext: Context) {
         }
     }
 
+    fun preloadAll() {
+        preloadSinet()
+        preloadMediapipe()
+    }
+
     fun segmentFrame(rgba: ByteBuffer, width: Int, height: Int, mask: ByteBuffer): Boolean {
         return NativeSegment.sinetReady &&
             NativeSegment.segmentFrame(

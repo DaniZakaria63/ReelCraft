@@ -21,7 +21,7 @@ class ReelCraftApplication : Application() {
         super.onCreate()
         SegmentEngine.init(this)
         appScope.launch {
-            SegmentEngine.getInstance().preloadSinet()
+            SegmentEngine.getInstance().preloadAll()
         }
         createExportChannel()
     }
