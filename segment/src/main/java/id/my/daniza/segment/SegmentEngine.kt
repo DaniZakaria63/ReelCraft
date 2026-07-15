@@ -60,6 +60,11 @@ class SegmentEngine private constructor(private val appContext: Context) {
         ensureMediapipeLoaded()
     }
 
+    fun preloadAll() {
+        ensureSinetLoaded()
+        ensureMediapipeLoaded()
+    }
+
     private fun ensureSinetLoaded() {
         if (sinetLoaded) return
         synchronized(loadLock) {
